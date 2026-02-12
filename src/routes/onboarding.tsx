@@ -1,5 +1,5 @@
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router';
-import { getAuth } from '@workos/authkit-tanstack-react-start';
+import { getAuth, getSignInUrl } from '@workos/authkit-tanstack-react-start';
 import { useEffect, useState } from 'react';
 import { useAction, useQuery } from 'convex/react';
 import { Building2, CheckCircle2, Loader2 } from 'lucide-react';
@@ -11,11 +11,20 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export const Route = createFileRoute('/onboarding')({
-  loader: async () => {
+  loader: async ({ context }) => {
     const { user } = await getAuth();
     if (!user) {
-      throw redirect({ to: '/' });
+      const href = await getSignInUrl({ data: { returnPathname: '/onboarding' } });
+      throw redirect({ href });
     }
+
+    const hasOrg = await context.queryClient.fetchQuery(
+      context.convexQueryClient.queryOptions(api.orgs.get.hasOrg, {}),
+    );
+    if (hasOrg.hasOrg) {
+      throw redirect({ to: '/authenticated' });
+    }
+
     return { user };
   },
   component: OnboardingPage,
@@ -54,10 +63,21 @@ function OnboardingPage() {
     };
   }, [syncCurrentUser]);
 
-  // If user already has org, redirect to dashboard
+  useEffect(() => {
+    if (!isSuccess && syncAttempted && hasOrgResult?.hasOrg) {
+      void navigate({ to: '/authenticated', replace: true });
+    }
+  }, [hasOrgResult?.hasOrg, isSuccess, navigate, syncAttempted]);
+
   if (syncAttempted && hasOrgResult?.hasOrg) {
-    navigate({ to: '/dashboard' });
-    return null;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-muted/50 p-4">
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          Redirecting to your workspace...
+        </div>
+      </div>
+    );
   }
 
   if (!syncAttempted || hasOrgResult === undefined) {
@@ -91,7 +111,7 @@ function OnboardingPage() {
       setIsSuccess(true);
 
       setTimeout(() => {
-        navigate({ to: '/dashboard' });
+        void navigate({ to: '/authenticated' });
       }, 1500);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create organization. Please try again.');
@@ -115,7 +135,7 @@ function OnboardingPage() {
               {isSuccess ? 'Organization Created!' : 'Create Your Organization'}
             </CardTitle>
             <CardDescription>
-              {isSuccess ? 'Redirecting you to your dashboard...' : 'Set up your CRM workspace to get started'}
+              {isSuccess ? 'Redirecting you to your workspace...' : 'Set up your CRM workspace to get started'}
             </CardDescription>
           </CardHeader>
           <CardContent>

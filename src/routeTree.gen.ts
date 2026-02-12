@@ -19,6 +19,7 @@ import { Route as AuthenticatedDealsRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedContactsRouteImport } from './routes/_authenticated/contacts'
 import { Route as AuthenticatedCompaniesRouteImport } from './routes/_authenticated/companies'
+import { Route as AuthenticatedAuthenticatedRouteImport } from './routes/_authenticated/authenticated'
 import { Route as AuthenticatedActivitiesRouteImport } from './routes/_authenticated/activities'
 import { Route as AuthenticatedDealsDealIdRouteImport } from './routes/_authenticated/deals/$dealId'
 
@@ -71,6 +72,12 @@ const AuthenticatedCompaniesRoute = AuthenticatedCompaniesRouteImport.update({
   path: '/companies',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedAuthenticatedRoute =
+  AuthenticatedAuthenticatedRouteImport.update({
+    id: '/authenticated',
+    path: '/authenticated',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedActivitiesRoute = AuthenticatedActivitiesRouteImport.update({
   id: '/activities',
   path: '/activities',
@@ -88,6 +95,7 @@ export interface FileRoutesByFullPath {
   '/callback': typeof CallbackRoute
   '/onboarding': typeof OnboardingRoute
   '/activities': typeof AuthenticatedActivitiesRoute
+  '/authenticated': typeof AuthenticatedAuthenticatedRoute
   '/companies': typeof AuthenticatedCompaniesRoute
   '/contacts': typeof AuthenticatedContactsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -101,6 +109,7 @@ export interface FileRoutesByTo {
   '/callback': typeof CallbackRoute
   '/onboarding': typeof OnboardingRoute
   '/activities': typeof AuthenticatedActivitiesRoute
+  '/authenticated': typeof AuthenticatedAuthenticatedRoute
   '/companies': typeof AuthenticatedCompaniesRoute
   '/contacts': typeof AuthenticatedContactsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -116,6 +125,7 @@ export interface FileRoutesById {
   '/callback': typeof CallbackRoute
   '/onboarding': typeof OnboardingRoute
   '/_authenticated/activities': typeof AuthenticatedActivitiesRoute
+  '/_authenticated/authenticated': typeof AuthenticatedAuthenticatedRoute
   '/_authenticated/companies': typeof AuthenticatedCompaniesRoute
   '/_authenticated/contacts': typeof AuthenticatedContactsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
@@ -131,6 +141,7 @@ export interface FileRouteTypes {
     | '/callback'
     | '/onboarding'
     | '/activities'
+    | '/authenticated'
     | '/companies'
     | '/contacts'
     | '/dashboard'
@@ -144,6 +155,7 @@ export interface FileRouteTypes {
     | '/callback'
     | '/onboarding'
     | '/activities'
+    | '/authenticated'
     | '/companies'
     | '/contacts'
     | '/dashboard'
@@ -158,6 +170,7 @@ export interface FileRouteTypes {
     | '/callback'
     | '/onboarding'
     | '/_authenticated/activities'
+    | '/_authenticated/authenticated'
     | '/_authenticated/companies'
     | '/_authenticated/contacts'
     | '/_authenticated/dashboard'
@@ -246,6 +259,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCompaniesRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/authenticated': {
+      id: '/_authenticated/authenticated'
+      path: '/authenticated'
+      fullPath: '/authenticated'
+      preLoaderRoute: typeof AuthenticatedAuthenticatedRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/activities': {
       id: '/_authenticated/activities'
       path: '/activities'
@@ -276,6 +296,7 @@ const AuthenticatedDealsRouteWithChildren =
 
 interface AuthenticatedRouteChildren {
   AuthenticatedActivitiesRoute: typeof AuthenticatedActivitiesRoute
+  AuthenticatedAuthenticatedRoute: typeof AuthenticatedAuthenticatedRoute
   AuthenticatedCompaniesRoute: typeof AuthenticatedCompaniesRoute
   AuthenticatedContactsRoute: typeof AuthenticatedContactsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
@@ -286,6 +307,7 @@ interface AuthenticatedRouteChildren {
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedActivitiesRoute: AuthenticatedActivitiesRoute,
+  AuthenticatedAuthenticatedRoute: AuthenticatedAuthenticatedRoute,
   AuthenticatedCompaniesRoute: AuthenticatedCompaniesRoute,
   AuthenticatedContactsRoute: AuthenticatedContactsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,

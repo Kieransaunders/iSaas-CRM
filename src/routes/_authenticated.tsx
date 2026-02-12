@@ -6,26 +6,34 @@ import { api } from '../../convex/_generated/api';
 import { MainLayout } from '@/components/layout/main-layout';
 
 export const Route = createFileRoute('/_authenticated')({
-  loader: async ({ context }) => {
+  loader: async ({ context, location }) => {
     const { user } = await getAuth();
     if (!user) {
-      const href = await getSignInUrl();
+      const href = await getSignInUrl({ data: { returnPathname: location.pathname } });
       throw redirect({ href });
     }
 
-    // For now, let the component handle org checking
-    // In production, you'd want to check Convex here and redirect to /onboarding if needed
-    return { user };
+    const hasOrg = await context.queryClient.fetchQuery(
+      context.convexQueryClient.queryOptions(api.orgs.get.hasOrg, {}),
+    );
+    if (!hasOrg.isAuthenticated) {
+      return { user, needsClientOrgCheck: true };
+    }
+
+    if (!hasOrg.hasOrg) {
+      throw redirect({ to: '/onboarding' });
+    }
+
+    return { user, needsClientOrgCheck: false };
   },
   component: AuthenticatedLayout,
 });
 
 function AuthenticatedLayout() {
-  Route.useLoaderData();
+  const { needsClientOrgCheck } = Route.useLoaderData();
   const navigate = useNavigate();
   const syncCurrentUser = useAction(api.users.syncActions.syncCurrentUserFromWorkOS);
-
-  const hasOrgCheck = useQuery(api.orgs.get.hasOrg);
+  const hasOrgCheck = useQuery(api.orgs.get.hasOrg, needsClientOrgCheck ? {} : 'skip');
 
   useEffect(() => {
     syncCurrentUser().catch((error) => {
@@ -34,10 +42,14 @@ function AuthenticatedLayout() {
   }, [syncCurrentUser]);
 
   useEffect(() => {
-    if (hasOrgCheck && !hasOrgCheck.hasOrg) {
-      navigate({ to: '/onboarding', replace: true });
+    if (!needsClientOrgCheck || !hasOrgCheck?.isAuthenticated) {
+      return;
     }
-  }, [hasOrgCheck, navigate]);
+
+    if (!hasOrgCheck.hasOrg) {
+      void navigate({ to: '/onboarding', replace: true });
+    }
+  }, [hasOrgCheck?.hasOrg, hasOrgCheck?.isAuthenticated, navigate, needsClientOrgCheck]);
 
   return (
     <MainLayout breadcrumbs={[{ label: 'Dashboard' }]}>
