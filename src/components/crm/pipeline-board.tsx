@@ -1,6 +1,6 @@
 import { DndContext, DragOverlay, PointerSensor, closestCorners, useSensor, useSensors } from '@dnd-kit/core';
 import type { DragEndEvent, DragOverEvent, DragStartEvent } from '@dnd-kit/core';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation } from 'convex/react';
 import type { Id } from '../../../convex/_generated/dataModel';
 import { api } from '../../../convex/_generated/api';
@@ -25,20 +25,72 @@ type PipelineBoardProps = {
 export function PipelineBoard({ columns, onDealClick }: PipelineBoardProps) {
   const moveDeal = useMutation(api.crm.pipelines.moveDealToStage);
   const [activeCard, setActiveCard] = useState<{ deal: DealCardData; stageName: string } | null>(null);
-  const [localColumns, setLocalColumns] = useState<Column[] | null>(null);
+  const [activeDealId, setActiveDealId] = useState<Id<'deals'> | null>(null);
+  const [dragSourceStageId, setDragSourceStageId] = useState<Id<'pipelineStages'> | null>(null);
+  const [dragDestinationStageId, setDragDestinationStageId] = useState<Id<'pipelineStages'> | null>(null);
+  const [pendingMove, setPendingMove] = useState<{
+    dealId: Id<'deals'>;
+    destinationStageId: Id<'pipelineStages'>;
+  } | null>(null);
+  const isCommittingMoveRef = useRef(false);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
-  const displayColumns = localColumns ?? columns;
 
   useEffect(() => {
-    if (!activeCard) {
-      setLocalColumns(null);
+    if (!pendingMove) return;
+
+    const currentStageId =
+      columns.find((column) => column.deals.some((deal) => deal._id === pendingMove.dealId))?.stage._id ?? null;
+
+    if (currentStageId === pendingMove.destinationStageId) {
+      isCommittingMoveRef.current = false;
+      setPendingMove(null);
     }
-  }, [columns, activeCard]);
+  }, [pendingMove, columns]);
+
+  const setDragDestinationIfChanged = useCallback((next: Id<'pipelineStages'> | null) => {
+    setDragDestinationStageId((previous) => (previous === next ? previous : next));
+  }, []);
+
+  const moveDealBetweenStages = useCallback(
+    (columnState: Column[], dealId: Id<'deals'>, destinationStageId: Id<'pipelineStages'>) => {
+      const sourceColumnIndex = columnState.findIndex((column) => column.deals.some((deal) => deal._id === dealId));
+      const destinationColumnIndex = columnState.findIndex((column) => column.stage._id === destinationStageId);
+
+      if (sourceColumnIndex === -1 || destinationColumnIndex === -1 || sourceColumnIndex === destinationColumnIndex) {
+        return columnState;
+      }
+
+      const next = columnState.map((column) => ({ ...column, deals: [...column.deals] }));
+      const movingDealIndex = next[sourceColumnIndex].deals.findIndex((deal) => deal._id === dealId);
+      if (movingDealIndex === -1) return columnState;
+
+      const [movedDeal] = next[sourceColumnIndex].deals.splice(movingDealIndex, 1);
+      next[destinationColumnIndex].deals.push({ ...movedDeal, stageId: destinationStageId });
+      return next;
+    },
+    [],
+  );
+
+  const findStageForDropTarget = useCallback((targetId: string, columnState: Column[]) => {
+    const stageMatch = columnState.find((column) => column.stage._id === targetId);
+    if (stageMatch) {
+      return stageMatch.stage._id;
+    }
+    const dealMatch = columnState.find((column) => column.deals.some((deal) => deal._id === targetId));
+    return dealMatch?.stage._id ?? null;
+  }, []);
+
+  const displayColumns = useMemo(() => {
+    if (pendingMove) {
+      return moveDealBetweenStages(columns, pendingMove.dealId, pendingMove.destinationStageId);
+    }
+    return columns;
+  }, [columns, pendingMove, moveDealBetweenStages]);
 
   const findDealAndStage = useCallback(
     (dealId: string) => {
-      for (const column of displayColumns) {
+      for (const column of columns) {
         const deal = column.deals.find((item) => item._id === dealId);
         if (deal) {
           return { deal, stageName: column.stage.name };
@@ -46,7 +98,7 @@ export function PipelineBoard({ columns, onDealClick }: PipelineBoardProps) {
       }
       return null;
     },
-    [displayColumns],
+    [columns],
   );
 
   const handleDragStart = useCallback(
@@ -54,88 +106,98 @@ export function PipelineBoard({ columns, onDealClick }: PipelineBoardProps) {
       const result = findDealAndStage(event.active.id as string);
       if (!result) return;
       setActiveCard(result);
-      setLocalColumns(columns.map((column) => ({ ...column, deals: [...column.deals] })));
+      setActiveDealId(result.deal._id);
+      setDragSourceStageId(result.deal.stageId);
+      setDragDestinationIfChanged(null);
     },
-    [findDealAndStage, columns],
+    [findDealAndStage, setDragDestinationIfChanged],
   );
 
   const handleDragOver = useCallback(
     (event: DragOverEvent) => {
       const { active, over } = event;
-      if (!over || !localColumns) return;
+      if (!over) return;
 
-      const activeDealId = active.id as string;
-      const overId = over.id as string;
+      const draggingDealId = active.id as Id<'deals'>;
+      const overId = String(over.id);
+      const overContainerId = over.data.current?.sortable?.containerId
+        ? String(over.data.current.sortable.containerId)
+        : null;
 
-      let sourceColumnIndex = -1;
-      let destinationColumnIndex = -1;
+      const destinationStageId = findStageForDropTarget(overContainerId ?? overId, columns);
+      const sourceStageId =
+        dragSourceStageId ??
+        columns.find((column) => column.deals.some((deal) => deal._id === draggingDealId))?.stage._id ??
+        null;
 
-      for (let index = 0; index < localColumns.length; index++) {
-        const column = localColumns[index];
-        if (column.deals.some((deal) => deal._id === activeDealId)) sourceColumnIndex = index;
-        if (column.stage._id === overId || column.deals.some((deal) => deal._id === overId)) {
-          destinationColumnIndex = index;
-        }
-      }
-
-      if (sourceColumnIndex === -1 || destinationColumnIndex === -1 || sourceColumnIndex === destinationColumnIndex) {
+      if (!destinationStageId || !sourceStageId || destinationStageId === sourceStageId) {
+        setDragDestinationIfChanged(null);
         return;
       }
 
-      setLocalColumns((previous) => {
-        if (!previous) return previous;
-
-        const next = previous.map((column) => ({ ...column, deals: [...column.deals] }));
-        const movingDealIndex = next[sourceColumnIndex].deals.findIndex((deal) => deal._id === activeDealId);
-        if (movingDealIndex === -1) return previous;
-
-        const [movedDeal] = next[sourceColumnIndex].deals.splice(movingDealIndex, 1);
-        next[destinationColumnIndex].deals.push(movedDeal);
-        return next;
-      });
+      setDragDestinationIfChanged(destinationStageId);
     },
-    [localColumns],
+    [columns, dragSourceStageId, findStageForDropTarget, setDragDestinationIfChanged],
   );
 
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
       const { active, over } = event;
       setActiveCard(null);
+      setActiveDealId(null);
 
-      if (!over || !localColumns) {
-        setLocalColumns(null);
+      if (isCommittingMoveRef.current) {
+        return;
+      }
+
+      if (!over) {
+        setDragDestinationIfChanged(null);
+        setDragSourceStageId(null);
         return;
       }
 
       const activeDealId = active.id as Id<'deals'>;
-      const overId = over.id as string;
+      const overId = String(over.id);
+      const overContainerId = over.data.current?.sortable?.containerId
+        ? String(over.data.current.sortable.containerId)
+        : null;
 
-      let destinationStageId: Id<'pipelineStages'> | null = null;
-      for (const column of localColumns) {
-        if (column.stage._id === overId || column.deals.some((deal) => deal._id === overId)) {
-          destinationStageId = column.stage._id;
-          break;
-        }
-      }
+      const destinationStageId = findStageForDropTarget(overContainerId ?? overId, columns);
+      const effectiveDestinationStageId = destinationStageId ?? dragDestinationStageId;
+      const sourceStageId =
+        dragSourceStageId ??
+        columns.find((column) => column.deals.some((deal) => deal._id === activeDealId))?.stage._id ??
+        null;
 
-      let sourceStageId: Id<'pipelineStages'> | null = null;
-      for (const column of columns) {
-        if (column.deals.some((deal) => deal._id === activeDealId)) {
-          sourceStageId = column.stage._id;
-          break;
-        }
-      }
-
-      if (destinationStageId && destinationStageId !== sourceStageId) {
-        moveDeal({ dealId: activeDealId, stageId: destinationStageId }).catch(() => {
-          setLocalColumns(null);
+      if (effectiveDestinationStageId && effectiveDestinationStageId !== sourceStageId) {
+        setPendingMove({
+          dealId: activeDealId,
+          destinationStageId: effectiveDestinationStageId,
         });
+        isCommittingMoveRef.current = true;
+        moveDeal({ dealId: activeDealId, stageId: effectiveDestinationStageId }).catch((error) => {
+          console.error('Failed to move deal between stages:', error);
+          isCommittingMoveRef.current = false;
+          setPendingMove(null);
+          setDragSourceStageId(null);
+          setDragDestinationIfChanged(null);
+        });
+        setDragSourceStageId(null);
+        setDragDestinationIfChanged(null);
         return;
       }
 
-      setLocalColumns(null);
+      if (!effectiveDestinationStageId) {
+        console.error('Failed to resolve destination stage for drop target:', {
+          overId,
+          overContainerId,
+        });
+      }
+
+      setDragSourceStageId(null);
+      setDragDestinationIfChanged(null);
     },
-    [localColumns, columns, moveDeal],
+    [columns, dragSourceStageId, dragDestinationStageId, moveDeal, findStageForDropTarget, setDragDestinationIfChanged],
   );
 
   return (
