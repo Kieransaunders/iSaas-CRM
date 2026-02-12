@@ -104,6 +104,7 @@ export const updateDeal = mutation({
     status: v.optional(v.union(v.literal('open'), v.literal('won'), v.literal('lost'))),
     expectedCloseDate: v.optional(v.number()),
     notes: v.optional(v.string()),
+    assigneeUserId: v.optional(v.id('users')),
   },
   handler: async (ctx, args) => {
     const { orgId, role } = await requireCrmUser(ctx);
@@ -121,8 +122,49 @@ export const updateDeal = mutation({
     if (args.status !== undefined) patch.status = args.status;
     if (args.expectedCloseDate !== undefined) patch.expectedCloseDate = args.expectedCloseDate;
     if (args.notes !== undefined) patch.notes = args.notes;
+    if (args.assigneeUserId !== undefined) patch.assigneeUserId = args.assigneeUserId;
 
     await ctx.db.patch('deals', args.dealId, patch);
     return args.dealId;
+  },
+});
+
+export const deleteDeal = mutation({
+  args: {
+    dealId: v.id('deals'),
+  },
+  handler: async (ctx, args) => {
+    const { orgId, role } = await requireCrmUser(ctx);
+    assertCanWrite(role);
+    ensureSameOrgEntity(orgId, await ctx.db.get(args.dealId), 'Deal not found');
+
+    // Remove deal-contact junctions
+    const dealContacts = await ctx.db
+      .query('dealContacts')
+      .withIndex('by_deal', (q) => q.eq('dealId', args.dealId))
+      .collect();
+    for (const dc of dealContacts) {
+      await ctx.db.delete(dc._id);
+    }
+
+    // Remove deal-company junctions
+    const dealCompanies = await ctx.db
+      .query('dealCompanies')
+      .withIndex('by_deal', (q) => q.eq('dealId', args.dealId))
+      .collect();
+    for (const dc of dealCompanies) {
+      await ctx.db.delete(dc._id);
+    }
+
+    // Remove activities linked to this deal
+    const activities = await ctx.db
+      .query('activities')
+      .withIndex('by_deal_created', (q) => q.eq('dealId', args.dealId))
+      .collect();
+    for (const activity of activities) {
+      await ctx.db.delete(activity._id);
+    }
+
+    await ctx.db.delete(args.dealId);
   },
 });
