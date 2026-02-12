@@ -117,12 +117,14 @@ export default defineSchema({
     phone: v.optional(v.string()),
     title: v.optional(v.string()),
     ownerUserId: v.optional(v.id('users')),
+    companyId: v.optional(v.id('companies')),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
     .index('by_org', ['orgId'])
     .index('by_org_name', ['orgId', 'firstName'])
-    .index('by_org_owner', ['orgId', 'ownerUserId']),
+    .index('by_org_owner', ['orgId', 'ownerUserId'])
+    .index('by_org_company', ['orgId', 'companyId']),
 
   // CRM pipelines
   pipelines: defineTable({
@@ -191,11 +193,14 @@ export default defineSchema({
     completedAt: v.optional(v.number()),
     createdByUserId: v.id('users'),
     assignedToUserId: v.optional(v.id('users')),
+    emailMessageId: v.optional(v.string()),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
     .index('by_org', ['orgId'])
     .index('by_deal_created', ['dealId', 'createdAt'])
+    .index('by_contact_created', ['contactId', 'createdAt'])
+    .index('by_company_created', ['companyId', 'createdAt'])
     .index('by_org_due', ['orgId', 'dueAt']),
 
   // Junction table between deals and contacts
