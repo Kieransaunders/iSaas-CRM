@@ -1,10 +1,12 @@
-import { Link, createFileRoute } from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router';
 import { useMutation, useQuery } from 'convex/react';
-import { Loader2 } from 'lucide-react';
-import { useEffect } from 'react';
+import { Loader2, Plus } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { api } from '../../../convex/_generated/api';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import type { Id } from '../../../convex/_generated/dataModel';
+import { DealDetailModal } from '@/components/crm/deal-detail-modal';
+import { PipelineBoard } from '@/components/crm/pipeline-board';
+import { Button } from '@/components/ui/button';
 
 export const Route = createFileRoute('/_authenticated/pipeline')({
   component: PipelinePage,
@@ -17,6 +19,12 @@ function PipelinePage() {
     api.crm.pipelines.getPipelineBoard,
     defaultPipeline ? { pipelineId: defaultPipeline._id } : 'skip',
   );
+  const stages = useQuery(
+    api.crm.pipelines.listStagesByPipeline,
+    defaultPipeline ? { pipelineId: defaultPipeline._id } : 'skip',
+  );
+
+  const [selectedDealId, setSelectedDealId] = useState<Id<'deals'> | null>(null);
 
   useEffect(() => {
     if (defaultPipeline === null) {
@@ -35,45 +43,30 @@ function PipelinePage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Pipeline</h1>
-        <p className="text-muted-foreground">Track deals as they move through each stage.</p>
+    <div className="flex h-full flex-col gap-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">{board.pipeline?.name ?? 'Pipeline'}</h1>
+          <p className="text-sm text-slate-500">
+            {board.columns.reduce((sum, column) => sum + column.deals.length, 0)} deals across {board.columns.length}{' '}
+            stages
+          </p>
+        </div>
+        <Button className="bg-orange-500 text-white hover:bg-orange-600" asChild>
+          <a href="/deals">
+            <Plus className="mr-1 h-4 w-4" />
+            Add Deal
+          </a>
+        </Button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-        {board.columns.map(
-          (column: {
-            stage: { _id: string; name: string };
-            deals: Array<{ _id: string; title: string; value?: number }>;
-          }) => (
-            <Card key={column.stage._id}>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center justify-between gap-2">
-                  <span>{column.stage.name}</span>
-                  <Badge variant="secondary">{column.deals.length}</Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {column.deals.length === 0 && <p className="text-sm text-muted-foreground">No deals in this stage.</p>}
-                {column.deals.map((deal: { _id: string; title: string; value?: number }) => (
-                  <Link
-                    key={deal._id}
-                    to="/deals/$dealId"
-                    params={{ dealId: deal._id }}
-                    className="block rounded-md border p-3 text-sm hover:bg-muted"
-                  >
-                    <p className="font-medium">{deal.title}</p>
-                    <p className="text-muted-foreground">
-                      {deal.value ? `$${deal.value.toLocaleString()}` : 'No value set'}
-                    </p>
-                  </Link>
-                ))}
-              </CardContent>
-            </Card>
-          ),
-        )}
+      <div className="-mx-4 flex-1 px-4" style={{ background: '#f8f7f5' }}>
+        <div className="py-4">
+          <PipelineBoard columns={board.columns} onDealClick={setSelectedDealId} />
+        </div>
       </div>
+
+      <DealDetailModal dealId={selectedDealId} onClose={() => setSelectedDealId(null)} stages={stages ?? []} />
     </div>
   );
 }
