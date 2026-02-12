@@ -147,11 +147,31 @@ export const getPipelineBoard = query({
         .collect(),
     ]);
 
+    // Enrich deals with primary contact name
+    const enrichedDeals = await Promise.all(
+      deals.map(async (deal) => {
+        const dealContact = await ctx.db
+          .query('dealContacts')
+          .withIndex('by_deal', (q) => q.eq('dealId', deal._id))
+          .first();
+
+        let contactName: string | null = null;
+        if (dealContact) {
+          const contact = await ctx.db.get('contacts', dealContact.contactId);
+          if (contact) {
+            contactName = contact.firstName + (contact.lastName ? ` ${contact.lastName}` : '');
+          }
+        }
+
+        return { ...deal, contactName };
+      }),
+    );
+
     return {
       pipeline,
       columns: stages.map((stage) => ({
         stage,
-        deals: deals.filter((deal) => deal.stageId === stage._id),
+        deals: enrichedDeals.filter((deal) => deal.stageId === stage._id),
       })),
     };
   },
