@@ -48,3 +48,9 @@ next-env.d.ts
 
 # Local Netlify folder
 .netlify
+
+# Personal development files (not part of starter template)
+.planning/
+Project documents/
+convex.skill
+deno.lock

@@ -312,4 +312,4 @@ Now that you're set up:
 
 ---
 
-Need help? [Open an issue](https://github.com/Kieransaunders/iSaaSIT/issues) on GitHub.
+Need help? [Open an issue](https://github.com/your-org/your-repo/issues) on GitHub.

@@ -21,7 +21,7 @@ export default defineConfig({
         replacesTitle: true,
       },
       social: [
-        { icon: 'github', label: 'GitHub', href: 'https://github.com/Kieransaunders/iSaaSIT' },
+        { icon: 'github', label: 'GitHub', href: 'https://github.com/your-org/your-repo' },
       ],
       sidebar: [
         {
@@ -65,11 +65,11 @@ export default defineConfig({
           title: 'Blog',
           customCss: ['./src/styles/blog.css'],
           authors: {
-            kieran: {
-              name: 'Kieran',
+            author: {
+              name: 'Your Name',
               title: 'Creator @ iSaaSIT',
               picture: '/favicon.svg',
-              url: 'https://github.com/Kieransaunders',
+              url: 'https://github.com/your-org',
             },
           },
         }),

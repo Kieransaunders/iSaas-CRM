@@ -111,7 +111,7 @@ function Home() {
         <section className="container mx-auto px-4 pt-24 pb-16 md:pt-32 md:pb-24">
           <div className="mx-auto flex max-w-[64rem] flex-col items-center gap-6 text-center">
             <a
-              href="https://github.com/Kieransaunders/iSaaSIT"
+              href="https://github.com/your-org/your-repo"
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center rounded-full border bg-muted px-3 py-1 text-sm font-medium hover:bg-muted/80 transition-colors"
@@ -139,7 +139,7 @@ function Home() {
                 </a>
               </Button>
               <Button size="lg" variant="outline" asChild className="h-12 px-8">
-                <a href="https://github.com/Kieransaunders/iSaaSIT" target="_blank" rel="noreferrer">
+                <a href="https://github.com/your-org/your-repo" target="_blank" rel="noreferrer">
                   <Github className="mr-2 h-4 w-4" />
                   View on GitHub
                 </a>
@@ -442,7 +442,7 @@ function CustomerList() {
                 </li>
                 <li>
                   <a
-                    href="https://github.com/Kieransaunders/iSaaSIT"
+                    href="https://github.com/your-org/your-repo"
                     className="hover:text-foreground transition-colors"
                   >
                     GitHub
@@ -492,7 +492,7 @@ function CustomerList() {
             </p>
             <div className="flex items-center gap-4">
               <a
-                href="https://github.com/Kieransaunders/iSaaSIT"
+                href="https://github.com/your-org/your-repo"
                 target="_blank"
                 rel="noreferrer"
                 className="text-muted-foreground hover:text-foreground transition-colors"

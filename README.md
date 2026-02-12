@@ -132,7 +132,7 @@ iSaaSIT is built specifically for **agencies and service businesses** managing m
 
 ```bash
 # 1. Clone & install
-git clone https://github.com/Kieransaunders/iSaaSIT.git
+git clone https://github.com/your-org/your-repo.git
 cd iSaaSIT
 npm install
 
@@ -356,14 +356,14 @@ npm install --legacy-peer-deps
 
 ## 📄 License
 
-MIT © [Kieran Saunders](https://github.com/Kieransaunders)
+MIT © [Your Name](https://github.com/your-org)
 
 ---
 
 ## 💬 Community
 
-- **Issues**: [GitHub Issues](https://github.com/Kieransaunders/iSaaSIT/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/Kieransaunders/iSaaSIT/discussions)
+- **Issues**: [GitHub Issues](https://github.com/your-org/your-repo/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/your-org/your-repo/discussions)
 
 ---
 

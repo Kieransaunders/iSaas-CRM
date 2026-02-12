@@ -94,7 +94,7 @@ export default defineConfig({
    description: Brief description
    date: 2026-02-04
    authors:
-     - kieran
+     - author
    ---
    ```
 3. Write your post
