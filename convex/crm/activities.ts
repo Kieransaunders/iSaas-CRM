@@ -32,6 +32,38 @@ export const listOrgActivities = query({
   },
 });
 
+export const listContactActivities = query({
+  args: {
+    contactId: v.id('contacts'),
+  },
+  handler: async (ctx, args) => {
+    const { orgId } = await requireCrmUser(ctx);
+    ensureSameOrgEntity(orgId, await ctx.db.get(args.contactId), 'Contact not found');
+
+    return await ctx.db
+      .query('activities')
+      .withIndex('by_contact_created', (q) => q.eq('contactId', args.contactId))
+      .order('desc')
+      .collect();
+  },
+});
+
+export const listCompanyActivities = query({
+  args: {
+    companyId: v.id('companies'),
+  },
+  handler: async (ctx, args) => {
+    const { orgId } = await requireCrmUser(ctx);
+    ensureSameOrgEntity(orgId, await ctx.db.get(args.companyId), 'Company not found');
+
+    return await ctx.db
+      .query('activities')
+      .withIndex('by_company_created', (q) => q.eq('companyId', args.companyId))
+      .order('desc')
+      .collect();
+  },
+});
+
 export const createActivity = mutation({
   args: {
     dealId: v.optional(v.id('deals')),
