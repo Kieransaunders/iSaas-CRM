@@ -1,0 +1,20 @@
+{
+  "name": "docs-site",
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "astro dev --host 127.0.0.1 --port 4321",
+    "start": "astro dev --host 127.0.0.1 --port 4321",
+    "build": "astro build",
+    "preview": "astro preview --host 127.0.0.1 --port 4321",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@astrojs/sitemap": "^3.7.0",
+    "@astrojs/starlight": "^0.37.6",
+    "@astrojs/tailwind": "^6.0.2",
+    "astro": "^5.6.1",
+    "sharp": "^0.34.2",
+    "starlight-blog": "^0.25.2"
+  }
+}

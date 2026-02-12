@@ -1,0 +1,66 @@
+---
+title: Introduction
+description: Introduction to iSaaSIT - SaaS starter pack for agencies building client portals
+---
+
+iSaaSIT is a **SaaS starter pack for agencies** who want to build and deploy **client portals**—secure, branded platforms where your customers can log in, access their project data, download deliverables, and collaborate with your team.
+
+## Who is this for?
+
+- **Agencies** who want to offer client portals as a service
+- **Freelancers** building custom client portals for their customers
+- **Consulting firms** needing secure document exchange platforms
+- **Service businesses** wanting to provide self-service access to clients
+
+## Key Concepts
+
+### Organization (Agency)
+
+The top-level entity representing your agency or company. The Organization:
+
+- Owns all billing and subscription data
+- Manages team members (Admin and Staff roles)
+- Controls global settings and configurations
+
+### Customer (Client Company)
+
+A client company managed by the Organization. Each Customer:
+
+- Has isolated data from other customers
+- Can have multiple Client users
+- Is assigned to Staff members for management
+
+### Users & Roles
+
+| Role       | Description                                                    |
+| ---------- | -------------------------------------------------------------- |
+| **Admin**  | Full access to organization data, billing, and user management |
+| **Staff**  | Access only to assigned customers and their data               |
+| **Client** | Limited access to their own customer data only                 |
+
+## Technology Stack
+
+### Frontend
+
+- **React 19** - Modern UI framework
+- **TanStack Start** - Full-stack React framework with SSR
+- **TanStack Router** - File-based routing
+- **Tailwind CSS v4** - Utility-first styling
+- **shadcn/ui** - Component library (planned)
+
+### Backend
+
+- **Convex** - Serverless backend with real-time database
+- **WorkOS AuthKit** - Enterprise-grade authentication
+- **TypeScript 5.9** - Type-safe development
+
+### Optional Integrations
+
+- **Polar** - Billing and subscriptions
+
+## Getting Help
+
+- [GitHub Repository](https://github.com/Kieransaunders/iSaaSIT)
+- [WorkOS Documentation](https://workos.com/docs)
+- [Convex Documentation](https://docs.convex.dev)
+- [TanStack Documentation](https://tanstack.com)

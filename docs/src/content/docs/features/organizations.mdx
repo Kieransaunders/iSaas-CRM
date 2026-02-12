@@ -1,0 +1,76 @@
+---
+title: Organizations
+description: Your agency and the foundation of your client portal
+---
+
+Your Organization represents **your agency**—the foundation of your client portal platform.
+
+## Overview
+
+Each Organization:
+- Represents your agency or company
+- Is the owner of your client portal platform
+- Manages your team (Admin and Staff roles)
+- Contains your Customers (the clients who use your portal)
+- Handles billing and subscriptions for your portal service
+
+## Creating an Organization
+
+Organizations are created via WorkOS. When a new user signs up:
+
+1. WorkOS creates a User record
+2. An Organization can be created or joined
+3. Convex stores additional org data (subscription, limits)
+
+## Organization Data Model
+
+```typescript
+// In Convex schema
+organizations: defineTable({
+  workosOrgId: v.string(),      // Link to WorkOS org
+  name: v.string(),
+  planId: v.optional(v.string()),
+  subscriptionStatus: v.string(),
+  maxCustomers: v.number(),
+  maxStaff: v.number(),
+  maxClients: v.number(),
+})
+```
+
+## Roles within an Organization
+
+| Role | Permissions |
+|------|-------------|
+| **Admin** | Full access, billing management, user invites |
+| **Staff** | Access to assigned customers only |
+
+## API Examples
+
+### Get Current Organization
+
+```typescript
+// Convex query
+export const getCurrent = query({
+  handler: async (ctx) => {
+    const user = await getCurrentUser(ctx);
+    if (!user) return null;
+    
+    return await ctx.db
+      .query('organizations')
+      .withIndex('by_workos_org_id', q => 
+        q.eq('workosOrgId', user.orgId)
+      )
+      .unique();
+  },
+});
+```
+
+## Usage Caps
+
+Organizations have usage caps based on their subscription plan:
+
+- `maxCustomers` - Maximum client companies
+- `maxStaff` - Maximum staff members
+- `maxClients` - Maximum client users per customer
+
+These caps are enforced at the API level.
