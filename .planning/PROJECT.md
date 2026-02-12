@@ -2,7 +2,7 @@
 
 ## What This Is
 
-The open-source SaaS starter kit for agencies and service businesses managing client companies. Provides a repeatable foundation for building client portals with data isolation, team assignments, and role-based access. Built on WorkOS AuthKit + Convex + TanStack Start.
+The open-source CRM starter kit for agencies and service businesses. Provides a repeatable foundation for pipelines, deals, contacts, companies, and activities with role-based access. Built on WorkOS AuthKit + Convex + TanStack Start.
 
 **Architecture:** Your agency (Org) manages multiple client companies (Customers) with proper data isolation, billing with usage caps, and team member assignments.
 

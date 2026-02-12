@@ -1,12 +1,12 @@
-import { Link } from "@tanstack/react-router";
-import { AlertTriangle, X } from "lucide-react";
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Link } from '@tanstack/react-router';
+import { AlertTriangle, X } from 'lucide-react';
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface CapReachedBannerProps {
-  resourceType: "customers" | "staff" | "clients";
+  resourceType: 'customers' | 'staff' | 'clients';
   currentCount: number;
   maxCount: number;
 }
@@ -15,11 +15,7 @@ interface CapReachedBannerProps {
  * Inline upgrade prompt shown in dialogs/forms when plan limits are reached.
  * Compact design that fits inside forms without overwhelming UI.
  */
-export function CapReachedBanner({
-  resourceType,
-  currentCount,
-  maxCount,
-}: CapReachedBannerProps) {
+export function CapReachedBanner({ resourceType, currentCount, maxCount }: CapReachedBannerProps) {
   // Only show when at limit
   if (currentCount < maxCount) {
     return null;
@@ -36,10 +32,8 @@ export function CapReachedBanner({
             <p className="text-sm font-medium text-amber-900 dark:text-amber-100">
               {resourceLabel} limit reached ({currentCount}/{maxCount})
             </p>
-            <p className="text-sm text-amber-800 dark:text-amber-200">
-              Upgrade your plan to add more {resourceType}.
-            </p>
-            <Link to="/billing">
+            <p className="text-sm text-amber-800 dark:text-amber-200">Upgrade your plan to add more {resourceType}.</p>
+            <Link to="/settings">
               <Button size="sm" variant="default" className="mt-2">
                 Upgrade Plan
               </Button>
@@ -71,7 +65,7 @@ export function UsageWarningBanner({ usage }: UsageWarningBannerProps) {
 
   if (usage.customers.count / usage.customers.max >= 0.8) {
     warningResources.push({
-      name: "Customers",
+      name: 'Customers',
       count: usage.customers.count,
       max: usage.customers.max,
     });
@@ -79,7 +73,7 @@ export function UsageWarningBanner({ usage }: UsageWarningBannerProps) {
 
   if (usage.staff.count / usage.staff.max >= 0.8) {
     warningResources.push({
-      name: "Staff",
+      name: 'Staff',
       count: usage.staff.count,
       max: usage.staff.max,
     });
@@ -87,7 +81,7 @@ export function UsageWarningBanner({ usage }: UsageWarningBannerProps) {
 
   if (usage.clients.count / usage.clients.max >= 0.8) {
     warningResources.push({
-      name: "Clients",
+      name: 'Clients',
       count: usage.clients.count,
       max: usage.clients.max,
     });
@@ -100,7 +94,7 @@ export function UsageWarningBanner({ usage }: UsageWarningBannerProps) {
 
   const resourceSummary = warningResources
     .map((resource) => `${resource.name}: ${resource.count}/${resource.max}`)
-    .join(", ");
+    .join(', ');
 
   return (
     <Alert className="border-amber-500 bg-amber-50 dark:bg-amber-950/20 mb-6">
@@ -109,27 +103,21 @@ export function UsageWarningBanner({ usage }: UsageWarningBannerProps) {
         <div className="flex-1 min-w-0">
           <AlertDescription className="block text-amber-900 dark:text-amber-100">
             <p className="text-sm">
-              <span className="font-medium">You&apos;re approaching your plan limits.</span>{" "}
-              {resourceSummary}.{" "}
-              <Link to="/billing" className="underline font-medium">
+              <span className="font-medium">You&apos;re approaching your plan limits.</span> {resourceSummary}.{' '}
+              <Link to="/settings" className="underline font-medium">
                 Upgrade
-              </Link>{" "}
+              </Link>{' '}
               to increase your limits.
             </p>
           </AlertDescription>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0 sm:ml-auto">
-          <Link to="/billing">
+          <Link to="/settings">
             <Button size="sm" variant="default">
               Upgrade
             </Button>
           </Link>
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => setIsDismissed(true)}
-            className="h-8 w-8 p-0"
-          >
+          <Button size="sm" variant="ghost" onClick={() => setIsDismissed(true)} className="h-8 w-8 p-0">
             <X className="h-4 w-4" />
           </Button>
         </div>

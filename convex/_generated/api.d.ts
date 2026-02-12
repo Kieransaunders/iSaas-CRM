@@ -8,13 +8,15 @@
  * @module
  */
 
-import type * as assignments_mutations from "../assignments/mutations.js";
-import type * as assignments_queries from "../assignments/queries.js";
 import type * as billing_actions from "../billing/actions.js";
 import type * as billing_plans from "../billing/plans.js";
 import type * as billing_queries from "../billing/queries.js";
-import type * as customers_clientQueries from "../customers/clientQueries.js";
-import type * as customers_crud from "../customers/crud.js";
+import type * as crm_activities from "../crm/activities.js";
+import type * as crm_authz from "../crm/authz.js";
+import type * as crm_companies from "../crm/companies.js";
+import type * as crm_contacts from "../crm/contacts.js";
+import type * as crm_deals from "../crm/deals.js";
+import type * as crm_pipelines from "../crm/pipelines.js";
 import type * as http from "../http.js";
 import type * as invitations_internal from "../invitations/internal.js";
 import type * as invitations_manage from "../invitations/manage.js";
@@ -48,13 +50,15 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
-  "assignments/mutations": typeof assignments_mutations;
-  "assignments/queries": typeof assignments_queries;
   "billing/actions": typeof billing_actions;
   "billing/plans": typeof billing_plans;
   "billing/queries": typeof billing_queries;
-  "customers/clientQueries": typeof customers_clientQueries;
-  "customers/crud": typeof customers_crud;
+  "crm/activities": typeof crm_activities;
+  "crm/authz": typeof crm_authz;
+  "crm/companies": typeof crm_companies;
+  "crm/contacts": typeof crm_contacts;
+  "crm/deals": typeof crm_deals;
+  "crm/pipelines": typeof crm_pipelines;
   http: typeof http;
   "invitations/internal": typeof invitations_internal;
   "invitations/manage": typeof invitations_manage;

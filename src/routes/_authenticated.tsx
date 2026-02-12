@@ -1,25 +1,9 @@
 import { Outlet, createFileRoute, redirect, useNavigate } from '@tanstack/react-router';
 import { getAuth, getSignInUrl } from '@workos/authkit-tanstack-react-start';
-import { createServerFn } from '@tanstack/react-start';
-import { fetchMutation } from 'convex/nextjs';
 import { useAction, useQuery } from 'convex/react';
 import { useEffect } from 'react';
 import { api } from '../../convex/_generated/api';
 import { MainLayout } from '@/components/layout/main-layout';
-import { UsageWarningBanner } from '@/components/billing/CapReachedBanner';
-
-// Server function to check if user has an org
-const checkUserOrg = createServerFn({ method: 'GET' })
-  .handler(async () => {
-    const { user } = await getAuth();
-    if (!user) {
-      return { hasOrg: false, isAuthenticated: false };
-    }
-
-    // Check if user has an org in Convex
-    // This would ideally be a direct Convex query, but we'll handle it client-side for now
-    return { hasOrg: true, isAuthenticated: true }; // Optimistic - actual check happens in loader
-  });
 
 export const Route = createFileRoute('/_authenticated')({
   loader: async ({ context }) => {
@@ -41,12 +25,7 @@ function AuthenticatedLayout() {
   const navigate = useNavigate();
   const syncCurrentUser = useAction(api.users.syncActions.syncCurrentUserFromWorkOS);
 
-  // Get usage stats for warning banner (only if user has org)
   const hasOrgCheck = useQuery(api.orgs.get.hasOrg);
-  const usageStats = useQuery(
-    api.billing.queries.getUsageStats,
-    hasOrgCheck?.hasOrg && hasOrgCheck.role === "admin" ? {} : "skip",
-  );
 
   useEffect(() => {
     syncCurrentUser().catch((error) => {
@@ -61,8 +40,7 @@ function AuthenticatedLayout() {
   }, [hasOrgCheck, navigate]);
 
   return (
-    <MainLayout breadcrumbs={[{ label: "Dashboard" }]}>
-      {usageStats && <UsageWarningBanner usage={usageStats.usage} />}
+    <MainLayout breadcrumbs={[{ label: 'Dashboard' }]}>
       <Outlet />
     </MainLayout>
   );

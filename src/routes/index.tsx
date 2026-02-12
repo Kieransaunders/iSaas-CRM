@@ -121,15 +121,15 @@ function Home() {
               <ArrowRight className="ml-2 h-3 w-3" />
             </a>
             <h1 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
-              Build your client portal in
+              Build your CRM workspace in
               <br />
               <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
                 days, not months
               </span>
             </h1>
             <p className="max-w-[42rem] leading-normal text-muted-foreground sm:text-xl sm:leading-8">
-              The open-source starter kit for agencies managing multiple client companies. Data isolation, team
-              assignments, and billing—all pre-configured.
+              The open-source CRM starter kit for agencies. Pipelines, deals, contacts, activities, and billing-ready
+              multi-tenancy in one foundation.
             </p>
             <div className="flex flex-wrap items-center justify-center gap-4">
               <Button size="lg" asChild className="h-12 px-8">
@@ -171,10 +171,10 @@ function Home() {
           <div className="mx-auto max-w-[64rem]">
             <div className="text-center mb-16">
               <h2 className="text-3xl font-bold tracking-tight sm:text-4xl mb-4">
-                Everything agencies need to manage clients
+                Everything agencies need to run CRM
               </h2>
               <p className="text-lg text-muted-foreground max-w-[42rem] mx-auto">
-                Stop rebuilding the same client portal infrastructure. Focus on what makes your agency unique.
+                Stop rebuilding CRM basics. Focus on your delivery and client outcomes.
               </p>
             </div>
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -185,13 +185,13 @@ function Home() {
               />
               <FeatureCard
                 icon={Building2}
-                title="Client Data Isolation"
-                description="Manage multiple client companies with complete data isolation. Each client only sees their own data—no leaks, no confusion."
+                title="Multi-tenant CRM"
+                description="Manage pipelines, deals, companies, contacts, and activities with strong org-level isolation."
               />
               <FeatureCard
                 icon={Users}
-                title="Team Assignments"
-                description="Admin manages the agency, Staff work on assigned clients, Clients access their own portal. Perfect for agency workflows."
+                title="Role-based Access"
+                description="Admin, Staff, and Client roles stay supported. Client role is read-only for CRM in v1."
               />
               <FeatureCard
                 icon={CreditCard}

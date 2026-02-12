@@ -1,19 +1,20 @@
-import { Link, useLocation } from "@tanstack/react-router";
-import { useQuery } from "convex/react";
+import { Link, useLocation } from '@tanstack/react-router';
+import { useQuery } from 'convex/react';
 import {
   BookOpen,
   Building2,
   ChevronDown,
-  CreditCard,
+  CircleCheckBig,
+  Contact,
+  Handshake,
   LayoutDashboard,
+  PanelLeftDashed,
   Settings,
   UserCircle,
-  Users,
-  Wrench,
-} from "lucide-react";
-import { useAuth } from "@workos/authkit-tanstack-react-start/client";
-import { api } from "../../../convex/_generated/api";
-import { BLOG_URL, DOCS_URL } from "@/lib/constants";
+} from 'lucide-react';
+import { useAuth } from '@workos/authkit-tanstack-react-start/client';
+import { api } from '../../../convex/_generated/api';
+import { BLOG_URL, DOCS_URL } from '@/lib/constants';
 import {
   Sidebar,
   SidebarContent,
@@ -26,73 +27,79 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
-} from "@/components/ui/sidebar";
+} from '@/components/ui/sidebar';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+} from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 // Navigation items for the sidebar
 const mainNavItems = [
   {
-    title: "Dashboard",
-    url: "/dashboard",
+    title: 'Dashboard',
+    url: '/dashboard',
     icon: LayoutDashboard,
-    roles: ["admin", "staff", "client"], // Available to all roles
+    roles: ['admin', 'staff', 'client'],
   },
   {
-    title: "Customers",
-    url: "/customers",
+    title: 'Pipeline',
+    url: '/pipeline',
+    icon: PanelLeftDashed,
+    roles: ['admin', 'staff', 'client'],
+  },
+  {
+    title: 'Deals',
+    url: '/deals',
+    icon: Handshake,
+    roles: ['admin', 'staff', 'client'],
+  },
+  {
+    title: 'Contacts',
+    url: '/contacts',
+    icon: Contact,
+    roles: ['admin', 'staff', 'client'],
+  },
+  {
+    title: 'Companies',
+    url: '/companies',
     icon: Building2,
-    roles: ["admin", "staff"], // Hidden from clients
+    roles: ['admin', 'staff', 'client'],
   },
   {
-    title: "Team",
-    url: "/team",
-    icon: Users,
-    roles: ["admin"], // Admin only
+    title: 'Activities',
+    url: '/activities',
+    icon: CircleCheckBig,
+    roles: ['admin', 'staff', 'client'],
   },
 ];
 
 const adminNavItems = [
   {
-    title: "Billing",
-    url: "/billing",
-    icon: CreditCard,
-    roles: ["admin"], // Admin only
-  },
-  {
-    title: "Settings",
-    url: "/settings",
+    title: 'Settings',
+    url: '/settings',
     icon: Settings,
-    roles: ["admin"], // Admin only
+    roles: ['admin', 'staff', 'client'],
   },
 ];
 
 const resourceNavItems = [
   {
-    title: "Tools",
-    url: "/tools",
-    icon: Wrench,
-    roles: ["admin"],
-  },
-  {
-    title: "Documentation",
+    title: 'Documentation',
     url: DOCS_URL,
     icon: BookOpen,
     external: true,
-    roles: ["admin", "staff"],
+    roles: ['admin', 'staff'],
   },
   {
-    title: "Blog",
+    title: 'Blog',
     url: BLOG_URL,
     icon: BookOpen,
     external: true,
-    roles: ["admin", "staff"],
+    roles: ['admin', 'staff'],
   },
 ];
 
@@ -119,7 +126,7 @@ export function AppSidebar() {
   const userInfo = useQuery(api.orgs.get.hasOrg);
 
   // Get user role, default to 'client' if not set
-  const userRole = userInfo?.role || "client";
+  const userRole = userInfo?.role || 'client';
 
   // Filter navigation items based on role
   const filteredMainNav = filterNavByRole(mainNavItems, userRole);
@@ -129,13 +136,13 @@ export function AppSidebar() {
   const getInitials = (name?: string | null, email?: string) => {
     if (name) {
       return name
-        .split(" ")
+        .split(' ')
         .map((n) => n[0])
-        .join("")
+        .join('')
         .toUpperCase()
         .slice(0, 2);
     }
-    return email?.slice(0, 2).toUpperCase() || "U";
+    return email?.slice(0, 2).toUpperCase() || 'U';
   };
 
   const isActiveRoute = (url: string) => {
@@ -154,9 +161,7 @@ export function AppSidebar() {
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">iSaaSIT</span>
-                  <span className="truncate text-xs text-muted-foreground">
-                    {org?.name || "Workspace"}
-                  </span>
+                  <span className="truncate text-xs text-muted-foreground">{org?.name || 'Workspace'}</span>
                 </div>
               </Link>
             </SidebarMenuButton>
@@ -173,11 +178,7 @@ export function AppSidebar() {
               <SidebarMenu>
                 {filteredMainNav.map((item) => (
                   <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={isActiveRoute(item.url)}
-                      tooltip={item.title}
-                    >
+                    <SidebarMenuButton asChild isActive={isActiveRoute(item.url)} tooltip={item.title}>
                       <Link to={item.url}>
                         <item.icon />
                         <span>{item.title}</span>
@@ -198,11 +199,7 @@ export function AppSidebar() {
               <SidebarMenu>
                 {filteredAdminNav.map((item) => (
                   <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={isActiveRoute(item.url)}
-                      tooltip={item.title}
-                    >
+                    <SidebarMenuButton asChild isActive={isActiveRoute(item.url)} tooltip={item.title}>
                       <Link to={item.url}>
                         <item.icon />
                         <span>{item.title}</span>
@@ -229,11 +226,7 @@ export function AppSidebar() {
                       isActive={!item.external && isActiveRoute(item.url)}
                     >
                       {item.external ? (
-                        <a
-                          href={item.url}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
+                        <a href={item.url} target="_blank" rel="noreferrer">
                           <item.icon />
                           <span>{item.title}</span>
                         </a>
@@ -273,9 +266,7 @@ export function AppSidebar() {
                         ? `${user.firstName} ${user.lastName}`
                         : user?.firstName || user?.email}
                     </span>
-                    <span className="truncate text-xs text-muted-foreground">
-                      {user?.email}
-                    </span>
+                    <span className="truncate text-xs text-muted-foreground">{user?.email}</span>
                   </div>
                   <ChevronDown className="ml-auto size-4" />
                 </SidebarMenuButton>

@@ -26,7 +26,7 @@ function OnboardingPage() {
   const navigate = useNavigate();
   const [orgName, setOrgName] = useState('');
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- user is guaranteed by loader
-  const [billingEmail, setBillingEmail] = useState((user?.email) ?? '');
+  const [billingEmail, setBillingEmail] = useState(user?.email ?? '');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -94,11 +94,7 @@ function OnboardingPage() {
         navigate({ to: '/dashboard' });
       }, 1500);
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : 'Failed to create organization. Please try again.'
-      );
+      setError(err instanceof Error ? err.message : 'Failed to create organization. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -119,9 +115,7 @@ function OnboardingPage() {
               {isSuccess ? 'Organization Created!' : 'Create Your Organization'}
             </CardTitle>
             <CardDescription>
-              {isSuccess
-                ? 'Redirecting you to your dashboard...'
-                : 'Set up your workspace to get started'}
+              {isSuccess ? 'Redirecting you to your dashboard...' : 'Set up your CRM workspace to get started'}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -137,9 +131,7 @@ function OnboardingPage() {
                     disabled={isLoading}
                     required
                   />
-                  <p className="text-xs text-muted-foreground">
-                    This will be the name of your organization
-                  </p>
+                  <p className="text-xs text-muted-foreground">This will be the name of your CRM organization</p>
                 </div>
 
                 <div className="space-y-2">
@@ -153,9 +145,7 @@ function OnboardingPage() {
                     disabled={isLoading}
                     required
                   />
-                  <p className="text-xs text-muted-foreground">
-                    Invoices and billing notifications will be sent here
-                  </p>
+                  <p className="text-xs text-muted-foreground">Invoices and billing notifications will be sent here</p>
                 </div>
 
                 {error && (
@@ -203,9 +193,7 @@ function OnboardingPage() {
           </CardContent>
         </Card>
 
-        <p className="text-center text-sm text-muted-foreground mt-4">
-          Signed in as {user.email}
-        </p>
+        <p className="text-center text-sm text-muted-foreground mt-4">Signed in as {user.email}</p>
       </div>
     </div>
   );

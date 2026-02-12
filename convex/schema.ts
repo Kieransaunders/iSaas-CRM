@@ -39,7 +39,7 @@ export default defineSchema({
     .index('by_workos_org_id', ['workosOrgId'])
     .index('by_subscription_id', ['subscriptionId']),
 
-  // Customers - client companies managed by an org
+  // Legacy customers table from client-portal model (temporary)
   customers: defineTable({
     orgId: v.id('orgs'),
     name: v.string(),
@@ -79,7 +79,7 @@ export default defineSchema({
     .index('by_org_role', ['orgId', 'role'])
     .index('by_customer', ['customerId']),
 
-  // Staff-Customer assignments - maps staff to customers they can access
+  // Legacy assignments table from client-portal model (temporary)
   staffCustomerAssignments: defineTable({
     staffUserId: v.id('users'),
     customerId: v.id('customers'),
@@ -91,6 +91,138 @@ export default defineSchema({
     .index('by_org', ['orgId'])
     // Prevent duplicate assignments
     .index('by_staff_customer', ['staffUserId', 'customerId']),
+
+  // CRM companies
+  companies: defineTable({
+    orgId: v.id('orgs'),
+    name: v.string(),
+    website: v.optional(v.string()),
+    phone: v.optional(v.string()),
+    industry: v.optional(v.string()),
+    notes: v.optional(v.string()),
+    ownerUserId: v.optional(v.id('users')),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index('by_org', ['orgId'])
+    .index('by_org_name', ['orgId', 'name'])
+    .index('by_org_owner', ['orgId', 'ownerUserId']),
+
+  // CRM contacts
+  contacts: defineTable({
+    orgId: v.id('orgs'),
+    firstName: v.string(),
+    lastName: v.optional(v.string()),
+    email: v.optional(v.string()),
+    phone: v.optional(v.string()),
+    title: v.optional(v.string()),
+    ownerUserId: v.optional(v.id('users')),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index('by_org', ['orgId'])
+    .index('by_org_name', ['orgId', 'firstName'])
+    .index('by_org_owner', ['orgId', 'ownerUserId']),
+
+  // CRM pipelines
+  pipelines: defineTable({
+    orgId: v.id('orgs'),
+    name: v.string(),
+    isDefault: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index('by_org', ['orgId'])
+    .index('by_org_default', ['orgId', 'isDefault']),
+
+  // CRM pipeline stages
+  pipelineStages: defineTable({
+    orgId: v.id('orgs'),
+    pipelineId: v.id('pipelines'),
+    name: v.string(),
+    order: v.number(),
+    winProbability: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index('by_org', ['orgId'])
+    .index('by_pipeline_order', ['pipelineId', 'order'])
+    .index('by_org_pipeline', ['orgId', 'pipelineId']),
+
+  // CRM deals
+  deals: defineTable({
+    orgId: v.id('orgs'),
+    pipelineId: v.id('pipelines'),
+    stageId: v.id('pipelineStages'),
+    title: v.string(),
+    value: v.optional(v.number()),
+    currency: v.optional(v.string()),
+    status: v.union(v.literal('open'), v.literal('won'), v.literal('lost')),
+    ownerUserId: v.optional(v.id('users')),
+    assigneeUserId: v.optional(v.id('users')),
+    expectedCloseDate: v.optional(v.number()),
+    notes: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index('by_org', ['orgId'])
+    .index('by_pipeline', ['pipelineId'])
+    .index('by_pipeline_stage', ['pipelineId', 'stageId'])
+    .index('by_org_owner', ['orgId', 'ownerUserId'])
+    .index('by_org_assignee', ['orgId', 'assigneeUserId']),
+
+  // CRM activity timeline entries
+  activities: defineTable({
+    orgId: v.id('orgs'),
+    dealId: v.optional(v.id('deals')),
+    contactId: v.optional(v.id('contacts')),
+    companyId: v.optional(v.id('companies')),
+    type: v.union(
+      v.literal('note'),
+      v.literal('call'),
+      v.literal('email'),
+      v.literal('meeting'),
+      v.literal('task'),
+      v.literal('status_change'),
+    ),
+    title: v.string(),
+    body: v.optional(v.string()),
+    dueAt: v.optional(v.number()),
+    completedAt: v.optional(v.number()),
+    createdByUserId: v.id('users'),
+    assignedToUserId: v.optional(v.id('users')),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index('by_org', ['orgId'])
+    .index('by_deal_created', ['dealId', 'createdAt'])
+    .index('by_org_due', ['orgId', 'dueAt']),
+
+  // Junction table between deals and contacts
+  dealContacts: defineTable({
+    orgId: v.id('orgs'),
+    dealId: v.id('deals'),
+    contactId: v.id('contacts'),
+    role: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index('by_org', ['orgId'])
+    .index('by_deal', ['dealId'])
+    .index('by_contact', ['contactId'])
+    .index('by_deal_contact', ['dealId', 'contactId']),
+
+  // Junction table between deals and companies
+  dealCompanies: defineTable({
+    orgId: v.id('orgs'),
+    dealId: v.id('deals'),
+    companyId: v.id('companies'),
+    relationshipType: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index('by_org', ['orgId'])
+    .index('by_deal', ['dealId'])
+    .index('by_company', ['companyId'])
+    .index('by_deal_company', ['dealId', 'companyId']),
 
   // Pending invitations - tracks invitations sent via WorkOS
   pendingInvitations: defineTable({

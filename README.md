@@ -1,8 +1,8 @@
 # iSaaSIT 🚀
 
-**The open-source SaaS starter kit for agencies managing client companies.**
+**The open-source CRM starter kit for agencies and service teams.**
 
-Launch your client portal with proper data isolation, team assignments, and billing—without rebuilding auth, tenancy, and billing infrastructure every time.
+Launch a CRM with pipelines, deals, contacts, companies, and activities—without rebuilding auth, tenancy, and billing infrastructure every time.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![React 19](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://react.dev/)
@@ -14,7 +14,7 @@ Launch your client portal with proper data isolation, team assignments, and bill
 
 ## ✨ What Makes This Different
 
-Most SaaS starter kits give you auth + billing. **iSaaSIT gives you multi-tenant client portals**—the architecture agencies actually need:
+Most SaaS starter kits give you auth + billing. **iSaaSIT gives you a multi-tenant CRM foundation** agencies can ship fast:
 
 ```
 ┌─────────────────┐
