@@ -18,7 +18,7 @@ test('protected route redirects when logged out', async ({ page }) => {
   await page.waitForLoadState('domcontentloaded');
 
   const currentUrl = page.url();
-  const redirectOk = /workos\.com/.test(currentUrl) || /\/$/.test(currentUrl);
+  const redirectOk = /workos\.com/.test(currentUrl) || /authkit\.app/.test(currentUrl) || /\/$/.test(currentUrl);
 
   expect(redirectOk, `Unexpected redirect URL: ${currentUrl}`).toBe(true);
 });
@@ -59,7 +59,13 @@ test.describe('authenticated smoke', () => {
     await page.getByRole('button', { name: 'Create Organization' }).click();
 
     await expect(page.getByRole('heading', { name: 'Organization Created!' })).toBeVisible();
-    await page.waitForURL(/\/dashboard/, { timeout: 10_000 });
+    await page.waitForURL(/\/(authenticated|dashboard)/, { timeout: 10_000 });
+  });
+
+  test('authenticated landing route resolves after onboarding', async ({ page }) => {
+    await page.goto('/authenticated');
+    await page.waitForLoadState('domcontentloaded');
+    await expect(page).toHaveURL(/\/(authenticated|dashboard|onboarding)/);
   });
 
   test('customer CRUD', async ({ page }) => {
