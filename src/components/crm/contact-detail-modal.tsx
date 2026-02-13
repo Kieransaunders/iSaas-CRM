@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from 'convex/react';
-import { Building2, Loader2, Mail, Phone, Plus, Trash2, User } from 'lucide-react';
+import { Building2, DollarSign, Loader2, Mail, Phone, Plus, Trash2, User } from 'lucide-react';
 import type { Id } from '../../../convex/_generated/dataModel';
 import { api } from '../../../convex/_generated/api';
 import {
@@ -33,6 +33,8 @@ import { ActivityTimeline } from './activity-timeline';
 type ContactDetailModalProps = {
   contactId: Id<'contacts'> | null;
   onClose: () => void;
+  onOpenDeal?: (dealId: Id<'deals'>) => void;
+  onOpenCompany?: (companyId: Id<'companies'>) => void;
 };
 
 function InfoField({ icon: Icon, label, value }: { icon: typeof Mail; label: string; value?: string }) {
@@ -47,10 +49,11 @@ function InfoField({ icon: Icon, label, value }: { icon: typeof Mail; label: str
   );
 }
 
-export function ContactDetailModal({ contactId, onClose }: ContactDetailModalProps) {
+export function ContactDetailModal({ contactId, onClose, onOpenDeal, onOpenCompany }: ContactDetailModalProps) {
   const contact = useQuery(api.crm.contacts.getContact, contactId ? { contactId } : 'skip');
   const activities = useQuery(api.crm.activities.listContactActivities, contactId ? { contactId } : 'skip');
   const companies = useQuery(api.crm.companies.listCompanies);
+  const contactDeals = useQuery(api.crm.relationships.listContactDeals, contactId ? { contactId } : 'skip');
 
   const updateContact = useMutation(api.crm.contacts.updateContact);
   const deleteContact = useMutation(api.crm.contacts.deleteContact);
@@ -69,9 +72,7 @@ export function ContactDetailModal({ contactId, onClose }: ContactDetailModalPro
 
   if (!contactId) return null;
 
-  const companyName = contact?.companyId
-    ? companies?.find((c) => c._id === contact.companyId)?.name
-    : undefined;
+  const companyName = contact?.companyId ? companies?.find((c) => c._id === contact.companyId)?.name : undefined;
 
   const handleStartEdit = () => {
     if (!contact) return;
@@ -140,7 +141,11 @@ export function ContactDetailModal({ contactId, onClose }: ContactDetailModalPro
                 <div className="ml-auto">
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                      >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </AlertDialogTrigger>
@@ -174,11 +179,15 @@ export function ContactDetailModal({ contactId, onClose }: ContactDetailModalPro
                       {contact.phone}
                     </span>
                   ) : null}
-                  {companyName ? (
-                    <span className="flex items-center gap-1">
+                  {companyName && contact?.companyId ? (
+                    <button
+                      type="button"
+                      className="flex items-center gap-1 hover:text-orange-600 hover:underline"
+                      onClick={() => onOpenCompany?.(contact.companyId!)}
+                    >
                       <Building2 className="h-3.5 w-3.5" />
                       {companyName}
-                    </span>
+                    </button>
                   ) : null}
                 </span>
               </DialogDescription>
@@ -187,6 +196,7 @@ export function ContactDetailModal({ contactId, onClose }: ContactDetailModalPro
             <Tabs defaultValue="info" className="mt-4">
               <TabsList>
                 <TabsTrigger value="info">Info</TabsTrigger>
+                <TabsTrigger value="deals">Deals</TabsTrigger>
                 <TabsTrigger value="activity">Activity</TabsTrigger>
               </TabsList>
 
@@ -284,6 +294,58 @@ export function ContactDetailModal({ contactId, onClose }: ContactDetailModalPro
                     <Button variant="outline" onClick={handleStartEdit}>
                       Edit
                     </Button>
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="deals" className="mt-4">
+                {contactDeals === undefined ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  </div>
+                ) : contactDeals.length === 0 ? (
+                  <p className="py-4 text-center text-sm text-muted-foreground">No deals linked to this contact.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {contactDeals.map((deal) => (
+                      <div
+                        key={deal._id}
+                        className="flex items-center justify-between rounded-md border border-border/70 bg-muted/20 p-3"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <button
+                            type="button"
+                            className="text-sm font-medium text-foreground hover:text-orange-600 hover:underline"
+                            onClick={() => onOpenDeal?.(deal._id)}
+                          >
+                            {deal.title}
+                          </button>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            {deal.value ? (
+                              <span className="flex items-center gap-0.5">
+                                <DollarSign className="h-3 w-3" />
+                                {deal.value.toLocaleString()} {deal.currency ?? 'USD'}
+                              </span>
+                            ) : null}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {deal.role ? (
+                            <Badge variant="secondary" className="text-xs">
+                              {deal.role}
+                            </Badge>
+                          ) : null}
+                          <Badge
+                            variant={
+                              deal.status === 'won' ? 'default' : deal.status === 'lost' ? 'destructive' : 'secondary'
+                            }
+                            className="text-xs"
+                          >
+                            {deal.status}
+                          </Badge>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
               </TabsContent>
