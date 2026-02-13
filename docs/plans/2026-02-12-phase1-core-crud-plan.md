@@ -1271,19 +1271,34 @@ git commit -m "feat: upgrade companies list to table layout with click-to-open d
 
 ---
 
+## Progress (Updated 2026-02-13)
+
+| Task | Status |
+|------|--------|
+| 1. Schema Changes | DONE |
+| 2. Contact Backend Functions | DONE |
+| 3. Company Backend Functions | DONE |
+| 4. Activity Queries | DONE |
+| 5. Deal Delete Mutation | DONE |
+| 6. Contact Detail Modal | DONE |
+| 7. Company Detail Modal | DONE |
+| 8. Deal Detail Modal Enhancement | DONE |
+| 9. Contacts List Page Upgrade | DONE |
+| 10. Companies List Page Upgrade | DONE |
+
 ## Verification Checklist
 
 After all 10 tasks are complete, verify:
 
-- [ ] Can create, view, edit, and delete a contact
-- [ ] Can create, view, edit, and delete a company
-- [ ] Can view, edit, and delete a deal
-- [ ] Contact detail modal shows Info and Activity tabs
-- [ ] Company detail modal shows Info, Contacts, and Activity tabs
-- [ ] Deal detail modal has editable Info, Activity, Contacts, and Company tabs
-- [ ] Contacts list shows table with clickable rows
-- [ ] Companies list shows table with clickable rows
-- [ ] Deleting a contact removes it from deal junctions
-- [ ] Deleting a company unlinks contacts and removes deal junctions
-- [ ] Deleting a deal removes junctions and activities
-- [ ] Activity logging works from all three detail modals
+- [x] Can create, view, edit, and delete a contact
+- [x] Can create, view, edit, and delete a company
+- [x] Can view, edit, and delete a deal
+- [x] Contact detail modal shows Info and Activity tabs
+- [x] Company detail modal shows Info, Contacts, and Activity tabs
+- [x] Deal detail modal has editable Info, Activity, Contacts, and Company tabs
+- [x] Contacts list shows table with clickable rows
+- [x] Companies list shows table with clickable rows
+- [x] Deleting a contact removes it from deal junctions
+- [x] Deleting a company unlinks contacts and removes deal junctions
+- [x] Deleting a deal removes junctions and activities
+- [x] Activity logging works from all three detail modals

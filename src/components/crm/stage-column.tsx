@@ -23,17 +23,19 @@ export function StageColumn({ stageId, stageName, deals, onDealClick }: StageCol
   return (
     <div
       className={cn(
-        'flex w-[280px] min-w-[280px] flex-col rounded-lg border border-t-[3px] bg-white shadow-sm',
+        'flex w-[280px] min-w-[280px] flex-col rounded-lg border border-border/80 border-t-[3px] bg-card/95 shadow-sm backdrop-blur',
         colors.border,
-        isOver && 'ring-2 ring-orange-300 ring-offset-1',
+        isOver && 'ring-2 ring-orange-400/60 ring-offset-1 ring-offset-background',
       )}
     >
-      <div className="border-b px-3 py-3">
+      <div className="border-b border-border/70 px-3 py-3">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-slate-800">{stageName}</h3>
+          <h3 className="text-sm font-semibold text-foreground">{stageName}</h3>
           <span className={cn('rounded-full px-2 py-0.5 text-xs font-bold', colors.badge)}>{deals.length}</span>
         </div>
-        <p className="mt-1 text-xs text-slate-400">{totalValue > 0 ? `$${totalValue.toLocaleString()}` : 'No value'}</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          {totalValue > 0 ? `$${totalValue.toLocaleString()}` : 'No value'}
+        </p>
       </div>
 
       <div ref={setNodeRef} className="min-h-[120px] flex-1 space-y-2 overflow-y-auto p-2">
@@ -43,8 +45,8 @@ export function StageColumn({ stageId, stageName, deals, onDealClick }: StageCol
           ))}
         </SortableContext>
         {deals.length === 0 && (
-          <div className="flex h-full min-h-[80px] items-center justify-center rounded-md border-2 border-dashed border-slate-200">
-            <p className="text-xs text-slate-300">Drag a deal here</p>
+          <div className="flex h-full min-h-[80px] items-center justify-center rounded-md border-2 border-dashed border-border/70 bg-muted/20">
+            <p className="text-xs text-muted-foreground">Drag a deal here</p>
           </div>
         )}
       </div>

@@ -37,8 +37,8 @@ export function DealCard({ deal, stageName, onClick }: DealCardProps) {
       ref={setNodeRef}
       style={style}
       className={cn(
-        'group relative cursor-pointer rounded-md border bg-white p-3 shadow-sm transition-all',
-        'hover:border-orange-200 hover:shadow-md',
+        'group relative cursor-pointer rounded-md border border-border/70 bg-card p-3 text-card-foreground shadow-sm transition-all',
+        'hover:border-orange-400/50 hover:bg-accent/40 hover:shadow-md',
         isDragging && 'z-50 rotate-[2deg] opacity-50 shadow-lg',
       )}
       onClick={() => onClick(deal._id)}
@@ -48,14 +48,14 @@ export function DealCard({ deal, stageName, onClick }: DealCardProps) {
         {...attributes}
         {...listeners}
       >
-        <GripVertical className="h-4 w-4 text-slate-300" />
+        <GripVertical className="h-4 w-4 text-muted-foreground/60" />
       </div>
       <div className="pl-4">
-        <p className="truncate text-sm font-medium text-slate-900">{deal.title}</p>
+        <p className="truncate text-sm font-medium text-foreground">{deal.title}</p>
         <p className={cn('mt-0.5 text-sm font-semibold', colors.text)}>
           {deal.value ? `$${deal.value.toLocaleString()}` : '—'}
         </p>
-        <p className="mt-1 truncate text-xs text-slate-400">{deal.contactName ?? 'No contact'}</p>
+        <p className="mt-1 truncate text-xs text-muted-foreground">{deal.contactName ?? 'No contact'}</p>
       </div>
     </div>
   );

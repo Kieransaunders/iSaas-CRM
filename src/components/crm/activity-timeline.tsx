@@ -44,12 +44,12 @@ type ActivityTimelineProps = {
 
 export function ActivityTimeline({ activities }: ActivityTimelineProps) {
   if (activities.length === 0) {
-    return <p className="py-4 text-center text-sm text-slate-400">No activities yet.</p>;
+    return <p className="py-4 text-center text-sm text-muted-foreground">No activities yet.</p>;
   }
 
   return (
     <div className="relative space-y-6 pl-10">
-      <div className="absolute bottom-2 left-4 top-2 w-0.5 bg-slate-200" />
+      <div className="absolute bottom-2 left-4 top-2 w-0.5 bg-border" />
 
       {activities.map((activity) => {
         const Icon = activityIcons[activity.type] ?? StickyNote;
@@ -69,14 +69,14 @@ export function ActivityTimeline({ activities }: ActivityTimelineProps) {
 
             <div>
               <div className="flex items-start justify-between gap-2">
-                <h4 className="text-sm font-semibold text-slate-800">{activity.title}</h4>
-                <span className="whitespace-nowrap text-xs text-slate-400">
+                <h4 className="text-sm font-semibold text-foreground">{activity.title}</h4>
+                <span className="whitespace-nowrap text-xs text-muted-foreground">
                   {formatRelativeTime(activity.createdAt)}
                 </span>
               </div>
               {activity.body ? (
-                <div className="mt-2 rounded-md border border-slate-100 bg-slate-50 p-2.5">
-                  <p className="line-clamp-3 text-sm italic text-slate-600">{activity.body}</p>
+                <div className="mt-2 rounded-md border border-border/70 bg-muted/25 p-2.5">
+                  <p className="line-clamp-3 text-sm italic text-muted-foreground">{activity.body}</p>
                 </div>
               ) : null}
             </div>

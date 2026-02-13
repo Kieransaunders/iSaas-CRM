@@ -46,8 +46,8 @@ function PipelinePage() {
     <div className="flex h-full flex-col gap-4">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">{board.pipeline?.name ?? 'Pipeline'}</h1>
-          <p className="text-sm text-slate-500">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">{board.pipeline?.name ?? 'Pipeline'}</h1>
+          <p className="text-sm text-muted-foreground">
             {board.columns.reduce((sum, column) => sum + column.deals.length, 0)} deals across {board.columns.length}{' '}
             stages
           </p>
@@ -60,7 +60,7 @@ function PipelinePage() {
         </Button>
       </div>
 
-      <div className="-mx-4 flex-1 px-4" style={{ background: '#f8f7f5' }}>
+      <div className="-mx-4 flex-1 px-4">
         <div className="py-4">
           <PipelineBoard columns={board.columns} onDealClick={setSelectedDealId} />
         </div>

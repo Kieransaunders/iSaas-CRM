@@ -2,11 +2,14 @@ import { createFileRoute } from '@tanstack/react-router';
 import { useMutation, useQuery } from 'convex/react';
 import { useState } from 'react';
 import { api } from '../../../convex/_generated/api';
+import type { Id } from '../../../convex/_generated/dataModel';
 import type { FormEvent } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { CompanyDetailModal } from '@/components/crm/company-detail-modal';
 
 export const Route = createFileRoute('/_authenticated/companies')({
   component: CompaniesPage,
@@ -18,6 +21,7 @@ function CompaniesPage() {
 
   const [name, setName] = useState('');
   const [website, setWebsite] = useState('');
+  const [selectedCompanyId, setSelectedCompanyId] = useState<Id<'companies'> | null>(null);
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -72,19 +76,50 @@ function CompaniesPage() {
           <CardTitle>All companies</CardTitle>
           <CardDescription>{companies?.length ?? 0} companies</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-2">
-          {companies === undefined || companies.length === 0 ? (
+        <CardContent>
+          {!companies || companies.length === 0 ? (
             <p className="text-sm text-muted-foreground">No companies yet.</p>
           ) : (
-            companies.map((company: { _id: string; name: string; website?: string }) => (
-              <div key={company._id} className="rounded-md border p-3">
-                <p className="font-medium">{company.name}</p>
-                <p className="text-sm text-muted-foreground">{company.website || 'No website'}</p>
-              </div>
-            ))
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Website</TableHead>
+                  <TableHead>Industry</TableHead>
+                  <TableHead>Phone</TableHead>
+                  <TableHead>Created</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {companies.map((company) => (
+                  <TableRow
+                    key={company._id}
+                    className="cursor-pointer"
+                    onClick={() => setSelectedCompanyId(company._id)}
+                  >
+                    <TableCell className="font-medium">{company.name}</TableCell>
+                    <TableCell>
+                      {company.website ? (
+                        <span className="text-muted-foreground">{company.website}</span>
+                      ) : '—'}
+                    </TableCell>
+                    <TableCell>{company.industry ?? '—'}</TableCell>
+                    <TableCell>{company.phone ?? '—'}</TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {new Date(company.createdAt).toLocaleDateString()}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           )}
         </CardContent>
       </Card>
+
+      <CompanyDetailModal
+        companyId={selectedCompanyId}
+        onClose={() => setSelectedCompanyId(null)}
+      />
     </div>
   );
 }

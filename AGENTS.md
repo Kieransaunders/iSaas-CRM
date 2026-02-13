@@ -4,19 +4,20 @@ This document provides essential context for AI coding agents working on the iSa
 
 ## Quick Reference
 
-| Resource | Location | Purpose |
-|----------|----------|---------|
-| **Project Overview** | `LLM.txt` (root) | Quick context for any LLM |
-| **AI Rules** | `.cursor/rules/*.mdc` | Specific patterns by topic |
-| **Example Prompts** | `.cursor/example-prompts.md` | Copy-paste prompts for tasks |
-| **Requirements** | `.planning/PROJECT.md` | Feature requirements & status |
-| **Troubleshooting** | `TROUBLESHOOTING.md` | Common errors and fixes |
-| **Security** | `SECURITY.md` | Security best practices |
-| **Migrations** | `MIGRATIONS.md` | Database migration patterns |
-| **Deployment** | `DEPLOYMENT.md` | Production deployment guide |
-| **Testing** | `TESTING.md` | Testing patterns and strategies |
-| **API Conventions** | `API.md` | API patterns and conventions |
-| **Contributing** | `CONTRIBUTING.md` | How to contribute |
+| Resource             | Location                     | Purpose                         |
+| -------------------- | ---------------------------- | ------------------------------- |
+| **Project Overview** | `LLM.txt` (root)             | Quick context for any LLM       |
+| **AI Rules**         | `.cursor/rules/*.mdc`        | Specific patterns by topic      |
+| **Example Prompts**  | `.cursor/example-prompts.md` | Copy-paste prompts for tasks    |
+| **Requirements**     | `.planning/PROJECT.md`       | Feature requirements & status   |
+| **Troubleshooting**  | `TROUBLESHOOTING.md`         | Common errors and fixes         |
+| **Security**         | `SECURITY.md`                | Security best practices         |
+| **Migrations**       | `MIGRATIONS.md`              | Database migration patterns     |
+| **Deployment**       | `DEPLOYMENT.md`              | Production deployment guide     |
+| **Testing**          | `TESTING.md`                 | Testing patterns and strategies |
+| **API Conventions**  | `API.md`                     | API patterns and conventions    |
+| **Contributing**     | `CONTRIBUTING.md`            | How to contribute               |
+| **Worktree Policy**  | `WORKTREE_POLICY.md`         | Safe planning + merge workflow  |
 
 ## AI-Assisted Development
 
@@ -26,33 +27,34 @@ This project includes structured rules for AI coding assistants to ensure consis
 
 The `.cursor/rules/*.mdc` files provide contextual guidance based on file type:
 
-| Rule File | Topic | Applies To |
-|-----------|-------|------------|
-| `01-project-overview.mdc` | Project basics, stack overview | All files |
-| `02-convex-patterns.mdc` | Backend patterns, schema, queries | `convex/**/*.ts` |
-| `03-tanstack-router.mdc` | Routing conventions | `src/routes/**/*.tsx` |
-| `04-authentication.mdc` | WorkOS AuthKit patterns | `src/**/*.tsx` |
-| `05-multi-tenancy.mdc` | Orgs, roles, data isolation | `convex/**/*.ts`, `src/**/*.tsx` |
-| `06-ui-components.mdc` | Tailwind v4, shadcn/ui | `src/**/*.tsx`, `src/**/*.css` |
-| `07-billing-integration.mdc` | Lemon Squeezy patterns | `convex/**/*.ts` |
-| `08-development-workflow.mdc` | Common tasks, debugging | All files |
+| Rule File                     | Topic                             | Applies To                       |
+| ----------------------------- | --------------------------------- | -------------------------------- |
+| `01-project-overview.mdc`     | Project basics, stack overview    | All files                        |
+| `02-convex-patterns.mdc`      | Backend patterns, schema, queries | `convex/**/*.ts`                 |
+| `03-tanstack-router.mdc`      | Routing conventions               | `src/routes/**/*.tsx`            |
+| `04-authentication.mdc`       | WorkOS AuthKit patterns           | `src/**/*.tsx`                   |
+| `05-multi-tenancy.mdc`        | Orgs, roles, data isolation       | `convex/**/*.ts`, `src/**/*.tsx` |
+| `06-ui-components.mdc`        | Tailwind v4, shadcn/ui            | `src/**/*.tsx`, `src/**/*.css`   |
+| `07-billing-integration.mdc`  | Lemon Squeezy patterns            | `convex/**/*.ts`                 |
+| `08-development-workflow.mdc` | Common tasks, debugging           | All files                        |
 
 ### For Claude Code
 
 Located in `.claude/skills/*/`, these provide domain-specific guidance:
 
-| Skill | Description |
-|-------|-------------|
-| `convex/` | Backend development with Convex (queries, mutations, schemas) |
-| `tanstack/` | TanStack Start, Router, and Query patterns |
-| `tailwind-v4/` | Tailwind CSS v4 styling and theming |
-| `shadcn-ui/` | shadcn/ui component usage |
-| `astro-starlight/` | Documentation site development |
-| `ui-ux-pro-max/` | UI/UX design intelligence (50+ styles, 21 palettes, 50 font pairings) |
+| Skill              | Description                                                           |
+| ------------------ | --------------------------------------------------------------------- |
+| `convex/`          | Backend development with Convex (queries, mutations, schemas)         |
+| `tanstack/`        | TanStack Start, Router, and Query patterns                            |
+| `tailwind-v4/`     | Tailwind CSS v4 styling and theming                                   |
+| `shadcn-ui/`       | shadcn/ui component usage                                             |
+| `astro-starlight/` | Documentation site development                                        |
+| `ui-ux-pro-max/`   | UI/UX design intelligence (50+ styles, 21 palettes, 50 font pairings) |
 
 **Note:** The `convex.skill` file in the project root is a packaged ZIP archive of the convex skill, used by other AI tools (e.g., Windsurf). It contains the same content as `.claude/skills/convex/`.
 
 Use the structured prompts in `.cursor/example-prompts.md` for common tasks like:
+
 - Initial project setup / PRD
 - Feature implementation
 - Convex function creation
@@ -65,6 +67,7 @@ Use the structured prompts in `.cursor/example-prompts.md` for common tasks like
 This project is optimized for **GSD** - a meta-prompting and spec-driven development system that prevents context rot and enables reliable AI-assisted coding.
 
 **What GSD provides:**
+
 - Structured project initialization (`/gsd:new-project`)
 - Research → Plan → Execute → Verify workflow
 - Parallel execution with fresh context windows
@@ -72,15 +75,15 @@ This project is optimized for **GSD** - a meta-prompting and spec-driven develop
 
 **Essential GSD Commands:**
 
-| Command | When to Use |
-|---------|-------------|
-| `/gsd:map-codebase` | Starting work on existing code - analyzes structure |
-| `/gsd:new-project` | Starting a new project or major feature |
+| Command                      | When to Use                                          |
+| ---------------------------- | ---------------------------------------------------- |
+| `/gsd:map-codebase`          | Starting work on existing code - analyzes structure  |
+| `/gsd:new-project`           | Starting a new project or major feature              |
 | `/gsd:discuss-phase <phase>` | Before planning - clarify implementation preferences |
-| `/gsd:plan-phase <phase>` | Create detailed execution plans |
-| `/gsd:execute-phase <phase>` | Execute plans with fresh context |
-| `/gsd:verify-phase <phase>` | Verify implementation meets goals |
-| `/gsd:checkpoint` | Review progress and decide next steps |
+| `/gsd:plan-phase <phase>`    | Create detailed execution plans                      |
+| `/gsd:execute-phase <phase>` | Execute plans with fresh context                     |
+| `/gsd:verify-phase <phase>`  | Verify implementation meets goals                    |
+| `/gsd:checkpoint`            | Review progress and decide next steps                |
 
 **GSD Principles for This Project:**
 
@@ -124,6 +127,7 @@ npx get-shit-done-cc@latest --claude --global
 ## Project Overview
 
 **iSaaSIT** is an open-source SaaS starter kit designed for agencies and freelancers who need a repeatable client project template. It provides a multi-tenant foundation where:
+
 - An **agency (Org)** manages multiple **client companies (Customers)**
 - Role-based data isolation ensures proper access control
 - Billing with usage caps enforces plan limits
@@ -136,6 +140,7 @@ npx get-shit-done-cc@latest --claude --global
 ## Technology Stack
 
 ### Frontend
+
 - **React 19** - UI framework
 - **TanStack Start** - Full-stack React framework with SSR support
 - **TanStack Router** - File-based routing with type-safe navigation
@@ -144,11 +149,13 @@ npx get-shit-done-cc@latest --claude --global
 - **Vite 7** - Build tool and dev server
 
 ### Backend
+
 - **Convex** - Serverless backend with real-time database
 - **WorkOS AuthKit** - Authentication via JWT tokens
 - **TypeScript 5.9** - Type-safe development
 
 ### Planned Integrations
+
 - **Lemon Squeezy** - Billing and subscriptions (Merchant of Record)
 - **shadcn/ui** - Component library
 
@@ -282,20 +289,20 @@ Files starting with `_` are layout routes that don't create URL segments.
 
 ### Core Entities
 
-| Entity | Description | Managed By |
-|--------|-------------|------------|
-| **Org** | Agency organization | WorkOS (org + membership) + Convex (subscription data) |
-| **Customer** | Agency's client company | Convex table (linked to orgId) |
-| **User** | End user | WorkOS; linked to customerId if role = Client |
-| **StaffCustomerAssignment** | Maps Staff to accessible Customers | Convex table |
+| Entity                      | Description                        | Managed By                                             |
+| --------------------------- | ---------------------------------- | ------------------------------------------------------ |
+| **Org**                     | Agency organization                | WorkOS (org + membership) + Convex (subscription data) |
+| **Customer**                | Agency's client company            | Convex table (linked to orgId)                         |
+| **User**                    | End user                           | WorkOS; linked to customerId if role = Client          |
+| **StaffCustomerAssignment** | Maps Staff to accessible Customers | Convex table                                           |
 
 ### Role Definitions
 
-| Role | Visibility | Capabilities |
-|------|------------|--------------|
-| **Admin** | All org data | Billing, invites, full access |
-| **Staff** | Assigned Customers only | Standard access within scope |
-| **Client** | Own Customer only | Limited access within scope |
+| Role       | Visibility              | Capabilities                  |
+| ---------- | ----------------------- | ----------------------------- |
+| **Admin**  | All org data            | Billing, invites, full access |
+| **Staff**  | Assigned Customers only | Standard access within scope  |
+| **Client** | Own Customer only       | Limited access within scope   |
 
 ### Billing Model
 
@@ -306,17 +313,20 @@ Files starting with `_` are layout routes that don't create URL segments.
 ## Code Style Guidelines
 
 ### Prettier Configuration
+
 - Single quotes
 - Trailing commas (all)
 - Print width: 120
 - Semicolons: true
 
 ### ESLint
+
 - Extends `@tanstack/eslint-config`
 - Includes `@convex-dev/eslint-plugin`
 - Generated files (`convex/_generated`, `routeTree.gen.ts`) are ignored
 
 ### TypeScript
+
 - Strict mode enabled
 - Path aliases: `@/*` and `~/*` both map to `./src/*`
 - Module resolution: Bundler
@@ -339,10 +349,12 @@ VITE_CONVEX_URL=https://xxx.convex.cloud
 ## Important Files to Know
 
 ### Auto-Generated Files (Do Not Edit)
+
 - `convex/_generated/*` - Generated by `npx convex dev`
 - `src/routeTree.gen.ts` - Generated by TanStack Router
 
 ### Key Configuration Files
+
 - `convex.json` - Convex deployment settings with AuthKit integration
 - `convex/auth.config.ts` - JWT validation for WorkOS tokens
 - `vite.config.ts` - Vite + TanStack Start + React configuration
@@ -386,15 +398,15 @@ Place the route file under `routes/_authenticated/` or add protection to an exis
 
 ### Development Guides
 
-| Document | When to Read |
-|----------|--------------|
-| `TROUBLESHOOTING.md` | When encountering errors or issues |
-| `SECURITY.md` | When implementing auth, authorization, or security features |
-| `MIGRATIONS.md` | When modifying database schema |
-| `DEPLOYMENT.md` | When deploying to production |
-| `TESTING.md` | When adding tests or testing features |
-| `API.md` | When designing APIs or Convex functions |
-| `CONTRIBUTING.md` | When contributing to the project |
+| Document             | When to Read                                                |
+| -------------------- | ----------------------------------------------------------- |
+| `TROUBLESHOOTING.md` | When encountering errors or issues                          |
+| `SECURITY.md`        | When implementing auth, authorization, or security features |
+| `MIGRATIONS.md`      | When modifying database schema                              |
+| `DEPLOYMENT.md`      | When deploying to production                                |
+| `TESTING.md`         | When adding tests or testing features                       |
+| `API.md`             | When designing APIs or Convex functions                     |
+| `CONTRIBUTING.md`    | When contributing to the project                            |
 
 ### External Documentation
 
@@ -408,6 +420,7 @@ Place the route file under `routes/_authenticated/` or add protection to an exis
 ## Current Status
 
 As of the last update, the following features are:
+
 - ✅ **Implemented:** User sign-in via WorkOS AuthKit, authenticated route protection, Convex backend with JWT validation
 - 🚧 **In Progress:** Organization creation and management, customer management, role-based access control
 - ⏳ **Planned:** Lemon Squeezy billing integration, shadcn/ui components, usage cap enforcement
@@ -416,4 +429,4 @@ See `.planning/PROJECT.md` for detailed requirements and progress tracking.
 
 ---
 
-*For AI coding assistance, refer to `.cursor/rules/*.mdc` and `.cursor/example-prompts.md`*
+_For AI coding assistance, refer to `.cursor/rules/_.mdc`and`.cursor/example-prompts.md`\*

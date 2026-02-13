@@ -1,10 +1,10 @@
-"use node";
+'use node';
 
-import { WorkOS } from "@workos-inc/node";
-import { ConvexError, v } from "convex/values";
-import { action } from "../_generated/server";
-import { internal } from "../_generated/api";
-import type { Id } from "../_generated/dataModel";
+import { WorkOS } from '@workos-inc/node';
+import { ConvexError, v } from 'convex/values';
+import { action } from '../_generated/server';
+import { internal } from '../_generated/api';
+import type { Id } from '../_generated/dataModel';
 
 /**
  * Create a new organization in WorkOS and Convex
@@ -15,11 +15,11 @@ export const createOrganization = action({
     name: v.string(),
     billingEmail: v.string(),
   },
-  handler: async (ctx, args): Promise<{ orgId: Id<"orgs">; workosOrgId: string }> => {
+  handler: async (ctx, args): Promise<{ orgId: Id<'orgs'>; workosOrgId: string }> => {
     // Get authenticated user
     const user = await ctx.auth.getUserIdentity();
     if (!user) {
-      throw new ConvexError("Not authenticated");
+      throw new ConvexError('Not authenticated');
     }
 
     // Extract WorkOS user ID from identity.subject
@@ -37,12 +37,27 @@ export const createOrganization = action({
         },
       });
 
-      // Create organization membership for current user as admin
-      await workos.userManagement.createOrganizationMembership({
-        userId: workosUserId,
-        organizationId: org.id,
-        roleSlug: "admin",
-      });
+      // Create organization membership for current user.
+      // Some WorkOS environments only have the default "member" role,
+      // so fall back when "admin" is not a valid role slug.
+      try {
+        await workos.userManagement.createOrganizationMembership({
+          userId: workosUserId,
+          organizationId: org.id,
+          roleSlug: 'admin',
+        });
+      } catch (membershipError) {
+        const message = membershipError instanceof Error ? membershipError.message.toLowerCase() : '';
+        if (!message.includes('role is invalid')) {
+          throw membershipError;
+        }
+
+        await workos.userManagement.createOrganizationMembership({
+          userId: workosUserId,
+          organizationId: org.id,
+          roleSlug: 'member',
+        });
+      }
 
       // Store org in Convex
       const convexOrgId = await ctx.runMutation(internal.workos.storeOrg.storeOrg, {
@@ -58,10 +73,8 @@ export const createOrganization = action({
       };
     } catch (error) {
       // Re-throw with user-friendly message for retry UX
-      const message = error instanceof Error ? error.message : "Unknown error";
-      throw new ConvexError(
-        `Failed to create organization: ${message}. Please try again.`
-      );
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      throw new ConvexError(`Failed to create organization: ${message}. Please try again.`);
     }
   },
 });

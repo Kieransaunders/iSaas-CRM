@@ -54,3 +54,4 @@ next-env.d.ts
 Project documents/
 convex.skill
 deno.lock
+.worktrees/

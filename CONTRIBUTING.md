@@ -46,9 +46,15 @@ npm run setup
 - `docs/description` - Documentation updates
 - `refactor/description` - Code refactoring
 
+### Worktree and Planning Policy
+
+- Follow `WORKTREE_POLICY.md` for safe worktree usage and merge workflow.
+- Draft in-progress notes in `.planning/` and only publish finalized plans to `docs/plans/`.
+
 ### Making Changes
 
 1. Create a branch:
+
    ```bash
    git checkout -b feature/my-feature
    ```
@@ -56,11 +62,13 @@ npm run setup
 2. Make your changes
 
 3. Test locally:
+
    ```bash
    npm run dev
    ```
 
 4. Lint and format:
+
    ```bash
    npm run lint
    npm run format
@@ -84,6 +92,7 @@ type(scope): description
 ```
 
 Types:
+
 - `feat` - New feature
 - `fix` - Bug fix
 - `docs` - Documentation
@@ -93,6 +102,7 @@ Types:
 - `chore` - Maintenance
 
 Examples:
+
 ```
 feat(auth): add password reset flow
 fix(billing): correct usage cap calculation
@@ -111,10 +121,10 @@ docs(readme): update setup instructions
 
 ```typescript
 // ✅ Good
-function getCustomer(id: Id<"customers">): Promise<Doc<"customers"> | null>
+function getCustomer(id: Id<'customers'>): Promise<Doc<'customers'> | null>;
 
 // ❌ Avoid
-function getCustomer(id: any): Promise<any>
+function getCustomer(id: any): Promise<any>;
 ```
 
 ### Convex Functions
@@ -183,20 +193,24 @@ src/
 
 ```markdown
 ## Description
+
 Brief description of changes
 
 ## Type of Change
+
 - [ ] Bug fix
 - [ ] New feature
 - [ ] Breaking change
 - [ ] Documentation update
 
 ## Testing
+
 How was this tested?
 
 ## Screenshots (if UI changes)
 
 ## Checklist
+
 - [ ] Code follows style guidelines
 - [ ] Self-review completed
 - [ ] Comments added for complex logic
@@ -216,6 +230,7 @@ How was this tested?
 ### Bug Reports
 
 Include:
+
 - Clear description
 - Steps to reproduce
 - Expected vs actual behavior
@@ -223,11 +238,13 @@ Include:
 - Screenshots if applicable
 
 Template:
+
 ```markdown
 **Description**
 Brief bug description
 
 **Steps to Reproduce**
+
 1. Go to '...'
 2. Click on '...'
 3. See error
@@ -239,6 +256,7 @@ What should happen
 What actually happens
 
 **Environment**
+
 - OS: [e.g., macOS 14]
 - Browser: [e.g., Chrome 120]
 - Node: [e.g., 20.10.0]
@@ -247,6 +265,7 @@ What actually happens
 ### Feature Requests
 
 Include:
+
 - Use case description
 - Proposed solution
 - Alternatives considered
@@ -269,18 +288,19 @@ Use JSDoc for complex functions:
  */
 export const assignStaffToCustomer = mutation({
   args: {
-    staffUserId: v.id("users"),
-    customerId: v.id("customers")
+    staffUserId: v.id('users'),
+    customerId: v.id('customers'),
   },
   handler: async (ctx, args) => {
     // Implementation
-  }
-})
+  },
+});
 ```
 
 ### Documentation Files
 
 When adding features, update relevant docs:
+
 - `AGENTS.md` - If changing patterns AI coders need to know
 - `.cursor/rules/*.mdc` - If adding new patterns
 - `README.md` - If changing setup/installation
@@ -294,17 +314,20 @@ While iSaaSIT doesn't have automated tests yet, manual testing is required:
 ### Testing Checklist
 
 For auth changes:
+
 - [ ] Sign in works
 - [ ] Sign out works
 - [ ] Protected routes work
 - [ ] Token refresh works
 
 For multi-tenancy changes:
+
 - [ ] Data isolation works
 - [ ] Role-based access works
 - [ ] Cross-org access blocked
 
 For UI changes:
+
 - [ ] Works on desktop
 - [ ] Works on mobile
 - [ ] No console errors

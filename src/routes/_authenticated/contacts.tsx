@@ -2,11 +2,14 @@ import { createFileRoute } from '@tanstack/react-router';
 import { useMutation, useQuery } from 'convex/react';
 import { useState } from 'react';
 import { api } from '../../../convex/_generated/api';
+import type { Id } from '../../../convex/_generated/dataModel';
 import type { FormEvent } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { ContactDetailModal } from '@/components/crm/contact-detail-modal';
 
 export const Route = createFileRoute('/_authenticated/contacts')({
   component: ContactsPage,
@@ -14,11 +17,13 @@ export const Route = createFileRoute('/_authenticated/contacts')({
 
 function ContactsPage() {
   const contacts = useQuery(api.crm.contacts.listContacts);
+  const companies = useQuery(api.crm.companies.listCompanies);
   const createContact = useMutation(api.crm.contacts.createContact);
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
+  const [selectedContactId, setSelectedContactId] = useState<Id<'contacts'> | null>(null);
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -74,19 +79,52 @@ function ContactsPage() {
           <CardTitle>All contacts</CardTitle>
           <CardDescription>{contacts?.length ?? 0} contacts</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-2">
-          {contacts === undefined || contacts.length === 0 ? (
+        <CardContent>
+          {!contacts || contacts.length === 0 ? (
             <p className="text-sm text-muted-foreground">No contacts yet.</p>
           ) : (
-            contacts.map((contact: { _id: string; firstName: string; lastName?: string; email?: string }) => (
-              <div key={contact._id} className="rounded-md border p-3">
-                <p className="font-medium">{[contact.firstName, contact.lastName].filter(Boolean).join(' ')}</p>
-                <p className="text-sm text-muted-foreground">{contact.email || 'No email'}</p>
-              </div>
-            ))
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Phone</TableHead>
+                  <TableHead>Company</TableHead>
+                  <TableHead>Created</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {contacts.map((contact) => (
+                  <TableRow
+                    key={contact._id}
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => setSelectedContactId(contact._id)}
+                  >
+                    <TableCell className="font-medium">
+                      {contact.firstName}{contact.lastName ? ` ${contact.lastName}` : ''}
+                    </TableCell>
+                    <TableCell>{contact.email ?? '—'}</TableCell>
+                    <TableCell>{contact.phone ?? '—'}</TableCell>
+                    <TableCell>
+                      {contact.companyId
+                        ? companies?.find((c) => c._id === contact.companyId)?.name ?? '—'
+                        : '—'}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {new Date(contact.createdAt).toLocaleDateString()}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           )}
         </CardContent>
       </Card>
+
+      <ContactDetailModal
+        contactId={selectedContactId}
+        onClose={() => setSelectedContactId(null)}
+      />
     </div>
   );
 }
