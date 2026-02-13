@@ -43,7 +43,7 @@
 
 ---
 
-### Phase 2: Relationship Management 🚧
+### Phase 2: Relationship Management ✅
 
 #### Backend Tasks
 
@@ -56,13 +56,13 @@
 
 #### Frontend Tasks
 
-- [ ] Task 5: Install `cmdk` and add shadcn `Command` component
-- [ ] Task 6: Update deal detail modal - Contacts tab
+- [x] Task 5: Install `cmdk` and add shadcn `Command` component
+- [x] Task 6: Update deal detail modal - Contacts tab
 - [x] Task 7: Update deal detail modal - Company tab
-- [ ] Task 8: Add Deals tab to contact detail modal
-- [ ] Task 9: Add Deals tab to company detail modal
-- [ ] Task 10: Wire up modal callbacks on pipeline page
-- [ ] Task 11: Wire up modal callbacks on contacts/companies pages
+- [x] Task 8: Add Deals tab to contact detail modal
+- [x] Task 9: Add Deals tab to company detail modal
+- [x] Task 10: Wire up modal callbacks on pipeline page
+- [x] Task 11: Wire up modal callbacks on contacts/companies pages
 
 **Pending Files:**
 

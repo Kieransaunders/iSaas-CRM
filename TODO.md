@@ -4,48 +4,19 @@
 
 ## Immediate Next Tasks
 
-### 1. Install cmdk Package
+### Phase 2 Complete ✅
 
-```bash
-npm install cmdk
-```
+All tasks have been completed:
 
-### 2. Create Command Component
+- ✅ Installed cmdk and created Command component
+- ✅ Updated deal detail modal with Contacts and Company linking UI
+- ✅ Added Deals tab to contact detail modal
+- ✅ Added Deals tab to company detail modal
+- ✅ Wired up cross-navigation on all pages (pipeline, contacts, companies)
 
-Create `src/components/ui/command.tsx` using the shadcn Command component pattern.
+### Phase 3 Ready to Start
 
-### 3. Update Deal Detail Modal
-
-File: `src/components/crm/deal-detail-modal.tsx`
-
-- Add imports for Command, Popover, Check, ChevronsUpDown, X icons
-- Add cross-navigation props (onOpenContact, onOpenCompany)
-- Replace Contacts tab placeholder with functional linking UI
-- [x] Replace Company tab placeholder with functional linking UI
-
-### 4. Update Contact Detail Modal
-
-File: `src/components/crm/contact-detail-modal.tsx`
-
-- Add Deals tab to show linked deals
-- Add cross-navigation callbacks
-- Make company name clickable
-
-### 5. Update Company Detail Modal
-
-File: `src/components/crm/company-detail-modal.tsx`
-
-- Add Deals tab to show linked deals
-- Add cross-navigation callbacks
-- Make contact names clickable
-
-### 6. Wire Up Cross-Navigation
-
-Files: `pipeline.tsx`, `contacts.tsx`, `companies.tsx`
-
-- Add state management for secondary modals
-- Pass callback props to all modals
-- Ensure smooth modal switching
+See `docs/plans/2026-02-13-phase3-search-filter-plan.md`
 
 ## Reference Documents
 
