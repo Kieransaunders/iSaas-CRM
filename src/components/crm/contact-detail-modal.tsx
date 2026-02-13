@@ -179,7 +179,7 @@ export function ContactDetailModal({ contactId, onClose, onOpenDeal, onOpenCompa
                       {contact.phone}
                     </span>
                   ) : null}
-                  {companyName && contact?.companyId ? (
+                  {companyName && contact.companyId ? (
                     <button
                       type="button"
                       className="flex items-center gap-1 hover:text-orange-600 hover:underline"

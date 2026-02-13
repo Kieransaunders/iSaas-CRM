@@ -187,7 +187,7 @@ export const listDealCompanies = query({
   },
   handler: async (ctx, args) => {
     const { orgId } = await requireCrmUser(ctx);
-    ensureSameOrgEntity(orgId, await ctx.db.get(args.dealId), 'Deal not found');
+    ensureSameOrgEntity(orgId, await ctx.db.get('deals', args.dealId), 'Deal not found');
 
     const links = await ctx.db
       .query('dealCompanies')
@@ -196,7 +196,7 @@ export const listDealCompanies = query({
 
     const companies = await Promise.all(
       links.map(async (link) => {
-        const company = await ctx.db.get(link.companyId);
+        const company = await ctx.db.get('companies', link.companyId);
         if (!company) return null;
         return {
           _id: company._id,
@@ -219,7 +219,7 @@ export const listCompanyDeals = query({
   },
   handler: async (ctx, args) => {
     const { orgId } = await requireCrmUser(ctx);
-    ensureSameOrgEntity(orgId, await ctx.db.get(args.companyId), 'Company not found');
+    ensureSameOrgEntity(orgId, await ctx.db.get('companies', args.companyId), 'Company not found');
 
     const links = await ctx.db
       .query('dealCompanies')
@@ -228,7 +228,7 @@ export const listCompanyDeals = query({
 
     const deals = await Promise.all(
       links.map(async (link) => {
-        const deal = await ctx.db.get(link.dealId);
+        const deal = await ctx.db.get('deals', link.dealId);
         if (!deal) return null;
         return {
           _id: deal._id,
