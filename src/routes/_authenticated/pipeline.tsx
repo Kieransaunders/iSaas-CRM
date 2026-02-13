@@ -1,18 +1,25 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useMutation, useQuery } from 'convex/react';
 import { Loader2, Plus } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { api } from '../../../convex/_generated/api';
 import type { Id } from '../../../convex/_generated/dataModel';
 import { ContactDetailModal } from '@/components/crm/contact-detail-modal';
 import { CompanyDetailModal } from '@/components/crm/company-detail-modal';
 import { DealDetailModal } from '@/components/crm/deal-detail-modal';
 import { PipelineBoard } from '@/components/crm/pipeline-board';
+import { useModalTransition } from '@/hooks/use-modal-transition';
 import { Button } from '@/components/ui/button';
 
 export const Route = createFileRoute('/_authenticated/pipeline')({
   component: PipelinePage,
 });
+
+type ActiveModal =
+  | { type: 'deal'; id: Id<'deals'> }
+  | { type: 'contact'; id: Id<'contacts'> }
+  | { type: 'company'; id: Id<'companies'> }
+  | null;
 
 function PipelinePage() {
   const ensureDefaultPipeline = useMutation(api.crm.pipelines.ensureDefaultPipeline);
@@ -26,9 +33,11 @@ function PipelinePage() {
     defaultPipeline ? { pipelineId: defaultPipeline._id } : 'skip',
   );
 
-  const [selectedDealId, setSelectedDealId] = useState<Id<'deals'> | null>(null);
-  const [selectedContactId, setSelectedContactId] = useState<Id<'contacts'> | null>(null);
-  const [selectedCompanyId, setSelectedCompanyId] = useState<Id<'companies'> | null>(null);
+  const { activeModal, openModal, closeModal } = useModalTransition<ActiveModal>();
+
+  const selectedDealId = activeModal?.type === 'deal' ? activeModal.id : null;
+  const selectedContactId = activeModal?.type === 'contact' ? activeModal.id : null;
+  const selectedCompanyId = activeModal?.type === 'company' ? activeModal.id : null;
 
   useEffect(() => {
     if (defaultPipeline === null) {
@@ -66,48 +75,30 @@ function PipelinePage() {
 
       <div className="-mx-4 flex-1 px-4">
         <div className="py-4">
-          <PipelineBoard columns={board.columns} onDealClick={setSelectedDealId} />
+          <PipelineBoard columns={board.columns} onDealClick={(dealId) => openModal({ type: 'deal', id: dealId })} />
         </div>
       </div>
 
       <DealDetailModal
         dealId={selectedDealId}
-        onClose={() => setSelectedDealId(null)}
+        onClose={closeModal}
         stages={stages ?? []}
-        onOpenContact={(contactId) => {
-          setSelectedDealId(null);
-          setSelectedContactId(contactId);
-        }}
-        onOpenCompany={(companyId) => {
-          setSelectedDealId(null);
-          setSelectedCompanyId(companyId);
-        }}
+        onOpenContact={(contactId) => openModal({ type: 'contact', id: contactId })}
+        onOpenCompany={(companyId) => openModal({ type: 'company', id: companyId })}
       />
 
       <ContactDetailModal
         contactId={selectedContactId}
-        onClose={() => setSelectedContactId(null)}
-        onOpenDeal={(dealId) => {
-          setSelectedContactId(null);
-          setSelectedDealId(dealId);
-        }}
-        onOpenCompany={(companyId) => {
-          setSelectedContactId(null);
-          setSelectedCompanyId(companyId);
-        }}
+        onClose={closeModal}
+        onOpenDeal={(dealId) => openModal({ type: 'deal', id: dealId })}
+        onOpenCompany={(companyId) => openModal({ type: 'company', id: companyId })}
       />
 
       <CompanyDetailModal
         companyId={selectedCompanyId}
-        onClose={() => setSelectedCompanyId(null)}
-        onOpenDeal={(dealId) => {
-          setSelectedCompanyId(null);
-          setSelectedDealId(dealId);
-        }}
-        onOpenContact={(contactId) => {
-          setSelectedCompanyId(null);
-          setSelectedContactId(contactId);
-        }}
+        onClose={closeModal}
+        onOpenDeal={(dealId) => openModal({ type: 'deal', id: dealId })}
+        onOpenContact={(contactId) => openModal({ type: 'contact', id: contactId })}
       />
     </div>
   );

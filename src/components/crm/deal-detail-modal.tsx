@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from 'convex/react';
-import { Calendar, Check, ChevronsUpDown, DollarSign, Loader2, Plus, Trash2, X } from 'lucide-react';
+import { ArrowUpRight, Calendar, Check, ChevronsUpDown, DollarSign, Loader2, Plus, Trash2, X } from 'lucide-react';
 import type { Id } from '../../../convex/_generated/dataModel';
 import { api } from '../../../convex/_generated/api';
 import {
@@ -41,9 +41,25 @@ type DealDetailModalProps = {
   stages: Array<{ _id: Id<'pipelineStages'>; name: string }>;
   onOpenContact?: (contactId: Id<'contacts'>) => void;
   onOpenCompany?: (companyId: Id<'companies'>) => void;
+  navigationPath?: Array<{ type: 'deal' | 'contact' | 'company'; id: string }>;
+  onNavigateToPathIndex?: (index: number) => void;
 };
 
-export function DealDetailModal({ dealId, onClose, stages, onOpenContact, onOpenCompany }: DealDetailModalProps) {
+const getPathLabel = (type: 'deal' | 'contact' | 'company') => {
+  if (type === 'deal') return 'Deal';
+  if (type === 'contact') return 'Contact';
+  return 'Company';
+};
+
+export function DealDetailModal({
+  dealId,
+  onClose,
+  stages,
+  onOpenContact,
+  onOpenCompany,
+  navigationPath,
+  onNavigateToPathIndex,
+}: DealDetailModalProps) {
   const deal = useQuery(api.crm.deals.getDeal, dealId ? { dealId } : 'skip');
   const activities = useQuery(api.crm.activities.listDealActivities, dealId ? { dealId } : 'skip');
 
@@ -157,32 +173,48 @@ export function DealDetailModal({ dealId, onClose, stages, onOpenContact, onOpen
 
   return (
     <Dialog open={!!dealId} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
+      <DialogContent className="h-[82vh] overflow-hidden p-0 sm:max-w-6xl">
         {!deal ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="h-6 w-6 animate-spin" />
           </div>
         ) : (
-          <>
-            <DialogHeader>
-              <div className="flex flex-wrap items-center gap-2">
-                <DialogTitle className="text-xl">{deal.title}</DialogTitle>
-                {currentStage && stageColors ? (
-                  <Badge className={cn('text-xs', stageColors.badge)}>{currentStage.name}</Badge>
-                ) : null}
-                <Badge
-                  variant={deal.status === 'won' ? 'default' : deal.status === 'lost' ? 'destructive' : 'secondary'}
-                >
-                  {deal.status}
-                </Badge>
+          <div className="flex h-full min-h-0 flex-col lg:flex-row">
+            <aside className="w-full shrink-0 border-b bg-muted/20 p-5 lg:w-80 lg:border-b-0 lg:border-r">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <h2 className="text-lg font-semibold leading-tight">{deal.title}</h2>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {currentStage && stageColors ? (
+                      <Badge className={cn('text-xs', stageColors.badge)}>{currentStage.name}</Badge>
+                    ) : null}
+                    <Badge
+                      variant={deal.status === 'won' ? 'default' : deal.status === 'lost' ? 'destructive' : 'secondary'}
+                      className="text-xs"
+                    >
+                      {deal.status}
+                    </Badge>
+                  </div>
+                </div>
+
+                <div className="space-y-2 rounded-md border bg-background p-4 text-sm">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-muted-foreground">Value</span>
+                    <span className="font-medium">{deal.value ? `$${deal.value.toLocaleString()}` : 'No value'}</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-muted-foreground">Close date</span>
+                    <span className="font-medium">
+                      {deal.expectedCloseDate ? new Date(deal.expectedCloseDate).toLocaleDateString() : 'Not set'}
+                    </span>
+                  </div>
+                </div>
+
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="ml-auto h-8 w-8 text-destructive hover:text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4" />
+                    <Button variant="outline" className="w-full justify-start text-destructive hover:text-destructive">
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Delete deal
                     </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
@@ -205,8 +237,35 @@ export function DealDetailModal({ dealId, onClose, stages, onOpenContact, onOpen
                   </AlertDialogContent>
                 </AlertDialog>
               </div>
-              <DialogDescription>
-                <span className="mt-2 flex items-center gap-4">
+            </aside>
+
+            <div className="flex min-h-0 flex-1 flex-col p-5">
+              <DialogHeader className="space-y-2">
+                {navigationPath && navigationPath.length > 1 && (
+                  <div className="flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
+                    {navigationPath.map((item, index) => {
+                      const isCurrent = index === navigationPath.length - 1;
+                      return (
+                        <div key={`${item.type}-${item.id}-${index}`} className="flex items-center gap-1">
+                          {isCurrent || !onNavigateToPathIndex ? (
+                            <span className="font-medium text-foreground">{getPathLabel(item.type)}</span>
+                          ) : (
+                            <button
+                              type="button"
+                              className="rounded px-1 py-0.5 hover:bg-muted hover:text-foreground"
+                              onClick={() => onNavigateToPathIndex(index)}
+                            >
+                              {getPathLabel(item.type)}
+                            </button>
+                          )}
+                          {!isCurrent && <span>/</span>}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+                <DialogTitle className="text-xl">Deal workspace</DialogTitle>
+                <DialogDescription className="flex items-center gap-4">
                   <span className="flex items-center gap-1">
                     <DollarSign className="h-3.5 w-3.5" />
                     {deal.value ? `$${deal.value.toLocaleString()}` : 'No value'}
@@ -217,435 +276,455 @@ export function DealDetailModal({ dealId, onClose, stages, onOpenContact, onOpen
                       {new Date(deal.expectedCloseDate).toLocaleDateString()}
                     </span>
                   ) : null}
-                </span>
-              </DialogDescription>
-            </DialogHeader>
+                </DialogDescription>
+              </DialogHeader>
 
-            <Tabs defaultValue="info" className="mt-4">
-              <TabsList>
-                <TabsTrigger value="info">Info</TabsTrigger>
-                <TabsTrigger value="activity">Activity</TabsTrigger>
-                <TabsTrigger value="contacts">Contacts</TabsTrigger>
-                <TabsTrigger value="company">Company</TabsTrigger>
-              </TabsList>
+              <Tabs defaultValue="info" className="mt-4 flex min-h-0 flex-1 flex-col">
+                <TabsList>
+                  <TabsTrigger value="info">Info</TabsTrigger>
+                  <TabsTrigger value="activity">Activity</TabsTrigger>
+                  <TabsTrigger value="contacts">Contacts</TabsTrigger>
+                  <TabsTrigger value="company">Company</TabsTrigger>
+                </TabsList>
 
-              <TabsContent value="info" className="mt-4 space-y-4">
-                {/* Stage selector always available */}
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label>Stage</Label>
-                    <Select value={deal.stageId} onValueChange={handleStageChange}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {stages.map((stage) => (
-                          <SelectItem key={stage._id} value={stage._id}>
-                            {stage.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                {isEditing ? (
-                  /* ---- Edit mode ---- */
-                  <div className="space-y-4">
+                <TabsContent value="info" className="mt-4 min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
+                  {/* Stage selector always available */}
+                  <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-2">
-                      <Label htmlFor="edit-title">Title</Label>
-                      <Input
-                        id="edit-title"
-                        value={editFields.title}
-                        onChange={(e) => setEditFields({ ...editFields, title: e.target.value })}
-                      />
+                      <Label>Stage</Label>
+                      <Select value={deal.stageId} onValueChange={handleStageChange}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {stages.map((stage) => (
+                            <SelectItem key={stage._id} value={stage._id}>
+                              {stage.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
+                  </div>
 
-                    <div className="grid gap-4 sm:grid-cols-2">
+                  {isEditing ? (
+                    /* ---- Edit mode ---- */
+                    <div className="space-y-4">
                       <div className="space-y-2">
-                        <Label htmlFor="edit-value">Value</Label>
+                        <Label htmlFor="edit-title">Title</Label>
                         <Input
-                          id="edit-value"
-                          type="number"
-                          value={editFields.value}
-                          onChange={(e) => setEditFields({ ...editFields, value: e.target.value })}
+                          id="edit-title"
+                          value={editFields.title}
+                          onChange={(e) => setEditFields({ ...editFields, title: e.target.value })}
                         />
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="edit-currency">Currency</Label>
-                        <Input
-                          id="edit-currency"
-                          value={editFields.currency}
-                          onChange={(e) => setEditFields({ ...editFields, currency: e.target.value })}
-                        />
+
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        <div className="space-y-2">
+                          <Label htmlFor="edit-value">Value</Label>
+                          <Input
+                            id="edit-value"
+                            type="number"
+                            value={editFields.value}
+                            onChange={(e) => setEditFields({ ...editFields, value: e.target.value })}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="edit-currency">Currency</Label>
+                          <Input
+                            id="edit-currency"
+                            value={editFields.currency}
+                            onChange={(e) => setEditFields({ ...editFields, currency: e.target.value })}
+                          />
+                        </div>
                       </div>
-                    </div>
 
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <div className="space-y-2">
-                        <Label htmlFor="edit-close-date">Expected Close Date</Label>
-                        <Input
-                          id="edit-close-date"
-                          type="date"
-                          value={editFields.expectedCloseDate}
-                          onChange={(e) => setEditFields({ ...editFields, expectedCloseDate: e.target.value })}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="edit-status">Status</Label>
-                        <Select
-                          value={editFields.status}
-                          onValueChange={(value) =>
-                            setEditFields({ ...editFields, status: value as 'open' | 'won' | 'lost' })
-                          }
-                        >
-                          <SelectTrigger id="edit-status">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="open">Open</SelectItem>
-                            <SelectItem value="won">Won</SelectItem>
-                            <SelectItem value="lost">Lost</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="edit-notes">Notes</Label>
-                      <Textarea
-                        id="edit-notes"
-                        value={editFields.notes}
-                        onChange={(e) => setEditFields({ ...editFields, notes: e.target.value })}
-                        rows={4}
-                      />
-                    </div>
-
-                    <div className="flex gap-2">
-                      <Button onClick={handleSave} className="bg-orange-500 text-white hover:bg-orange-600">
-                        Save
-                      </Button>
-                      <Button variant="outline" onClick={() => setIsEditing(false)}>
-                        Cancel
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  /* ---- Read-only mode ---- */
-                  <div className="space-y-4">
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <div className="space-y-2">
-                        <Label>Value</Label>
-                        <p className="py-2 text-sm font-medium">
-                          {deal.value ? `$${deal.value.toLocaleString()} ${deal.currency ?? 'USD'}` : '—'}
-                        </p>
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Expected Close Date</Label>
-                        <p className="py-2 text-sm font-medium">
-                          {deal.expectedCloseDate ? new Date(deal.expectedCloseDate).toLocaleDateString() : '—'}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label>Status</Label>
-                      <div className="py-2">
-                        <Badge
-                          variant={
-                            deal.status === 'won' ? 'default' : deal.status === 'lost' ? 'destructive' : 'secondary'
-                          }
-                        >
-                          {deal.status}
-                        </Badge>
-                      </div>
-                    </div>
-
-                    {deal.notes ? (
-                      <div className="space-y-2">
-                        <Label>Notes</Label>
-                        <p className="rounded-md border border-border/70 bg-muted/30 p-3 text-sm text-muted-foreground">
-                          {deal.notes}
-                        </p>
-                      </div>
-                    ) : null}
-
-                    <Button variant="outline" onClick={startEditing}>
-                      Edit
-                    </Button>
-                  </div>
-                )}
-              </TabsContent>
-
-              <TabsContent value="activity" className="mt-4">
-                {activities === undefined ? (
-                  <div className="flex justify-center py-8">
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                  </div>
-                ) : (
-                  <ActivityTimeline activities={activities} />
-                )}
-              </TabsContent>
-
-              <TabsContent value="contacts" className="mt-4 space-y-4">
-                {/* Link contact combobox */}
-                <div className="flex items-center gap-2">
-                  <Popover open={contactPopoverOpen} onOpenChange={setContactPopoverOpen}>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" size="sm" className="gap-1">
-                        <Plus className="h-3.5 w-3.5" />
-                        Link Contact
-                        <ChevronsUpDown className="h-3.5 w-3.5 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[280px] p-0" align="start">
-                      <Command>
-                        <CommandInput placeholder="Search contacts..." />
-                        <CommandList>
-                          <CommandEmpty>No contacts found.</CommandEmpty>
-                          <CommandGroup>
-                            {(allContacts ?? [])
-                              .filter((c) => !dealContacts?.some((dc) => dc._id === c._id))
-                              .map((contact) => (
-                                <CommandItem
-                                  key={contact._id}
-                                  value={`${contact.firstName} ${contact.lastName ?? ''} ${contact.email ?? ''}`}
-                                  onSelect={async () => {
-                                    if (!dealId) return;
-                                    await linkContact({
-                                      dealId,
-                                      contactId: contact._id,
-                                      role: contactRole || undefined,
-                                    });
-                                    setContactPopoverOpen(false);
-                                    setContactRole('');
-                                  }}
-                                >
-                                  <span>
-                                    {contact.firstName}
-                                    {contact.lastName ? ` ${contact.lastName}` : ''}
-                                  </span>
-                                  {contact.email ? (
-                                    <span className="ml-auto text-xs text-muted-foreground">{contact.email}</span>
-                                  ) : null}
-                                </CommandItem>
-                              ))}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                      <div className="border-t px-3 py-2">
-                        <Select value={contactRole} onValueChange={setContactRole}>
-                          <SelectTrigger className="h-8 text-xs">
-                            <SelectValue placeholder="Role (optional)" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Decision Maker">Decision Maker</SelectItem>
-                            <SelectItem value="Champion">Champion</SelectItem>
-                            <SelectItem value="Influencer">Influencer</SelectItem>
-                            <SelectItem value="User">User</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </PopoverContent>
-                  </Popover>
-                </div>
-
-                {/* Linked contacts list */}
-                {dealContacts === undefined ? (
-                  <div className="flex justify-center py-8">
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                  </div>
-                ) : dealContacts.length === 0 ? (
-                  <p className="py-4 text-center text-sm text-muted-foreground">No contacts linked yet.</p>
-                ) : (
-                  <div className="space-y-2">
-                    {dealContacts.map((contact) => (
-                      <div
-                        key={contact._id}
-                        className="flex items-center justify-between rounded-md border border-border/70 bg-muted/20 p-3"
-                      >
-                        <div className="min-w-0 flex-1">
-                          <button
-                            type="button"
-                            className="text-sm font-medium text-foreground hover:text-orange-600 hover:underline"
-                            onClick={() => onOpenContact?.(contact._id)}
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        <div className="space-y-2">
+                          <Label htmlFor="edit-close-date">Expected Close Date</Label>
+                          <Input
+                            id="edit-close-date"
+                            type="date"
+                            value={editFields.expectedCloseDate}
+                            onChange={(e) => setEditFields({ ...editFields, expectedCloseDate: e.target.value })}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="edit-status">Status</Label>
+                          <Select
+                            value={editFields.status}
+                            onValueChange={(value) =>
+                              setEditFields({ ...editFields, status: value as 'open' | 'won' | 'lost' })
+                            }
                           >
-                            {contact.firstName}
-                            {contact.lastName ? ` ${contact.lastName}` : ''}
-                          </button>
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            {contact.email ? <span>{contact.email}</span> : null}
-                            {contact.title ? <span>{contact.title}</span> : null}
+                            <SelectTrigger id="edit-status">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="open">Open</SelectItem>
+                              <SelectItem value="won">Won</SelectItem>
+                              <SelectItem value="lost">Lost</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="edit-notes">Notes</Label>
+                        <Textarea
+                          id="edit-notes"
+                          value={editFields.notes}
+                          onChange={(e) => setEditFields({ ...editFields, notes: e.target.value })}
+                          rows={4}
+                        />
+                      </div>
+
+                      <div className="flex gap-2">
+                        <Button onClick={handleSave} className="bg-orange-500 text-white hover:bg-orange-600">
+                          Save
+                        </Button>
+                        <Button variant="outline" onClick={() => setIsEditing(false)}>
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    /* ---- Read-only mode ---- */
+                    <div className="space-y-4">
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        <div className="space-y-2">
+                          <Label>Value</Label>
+                          <p className="py-2 text-sm font-medium">
+                            {deal.value ? `$${deal.value.toLocaleString()} ${deal.currency ?? 'USD'}` : '—'}
+                          </p>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Expected Close Date</Label>
+                          <p className="py-2 text-sm font-medium">
+                            {deal.expectedCloseDate ? new Date(deal.expectedCloseDate).toLocaleDateString() : '—'}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Status</Label>
+                        <div className="py-2">
+                          <Badge
+                            variant={
+                              deal.status === 'won' ? 'default' : deal.status === 'lost' ? 'destructive' : 'secondary'
+                            }
+                          >
+                            {deal.status}
+                          </Badge>
+                        </div>
+                      </div>
+
+                      {deal.notes ? (
+                        <div className="space-y-2">
+                          <Label>Notes</Label>
+                          <p className="rounded-md border border-border/70 bg-muted/30 p-3 text-sm text-muted-foreground">
+                            {deal.notes}
+                          </p>
+                        </div>
+                      ) : null}
+
+                      <Button variant="outline" onClick={startEditing}>
+                        Edit
+                      </Button>
+                    </div>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="activity" className="mt-4 min-h-0 flex-1 overflow-y-auto pr-1">
+                  {activities === undefined ? (
+                    <div className="flex justify-center py-8">
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                    </div>
+                  ) : (
+                    <ActivityTimeline activities={activities} />
+                  )}
+                </TabsContent>
+
+                <TabsContent value="contacts" className="mt-4 min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
+                  {/* Link contact combobox */}
+                  <div className="flex items-center gap-2">
+                    <Popover open={contactPopoverOpen} onOpenChange={setContactPopoverOpen}>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" size="sm" className="gap-1">
+                          <Plus className="h-3.5 w-3.5" />
+                          Link Contact
+                          <ChevronsUpDown className="h-3.5 w-3.5 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[280px] p-0" align="start">
+                        <Command>
+                          <CommandInput placeholder="Search contacts..." />
+                          <CommandList>
+                            <CommandEmpty>No contacts found.</CommandEmpty>
+                            <CommandGroup>
+                              {(allContacts ?? [])
+                                .filter((c) => !dealContacts?.some((dc) => dc._id === c._id))
+                                .map((contact) => (
+                                  <CommandItem
+                                    key={contact._id}
+                                    value={`${contact.firstName} ${contact.lastName ?? ''} ${contact.email ?? ''}`}
+                                    onSelect={async () => {
+                                      if (!dealId) return;
+                                      await linkContact({
+                                        dealId,
+                                        contactId: contact._id,
+                                        role: contactRole || undefined,
+                                      });
+                                      setContactPopoverOpen(false);
+                                      setContactRole('');
+                                    }}
+                                  >
+                                    <span>
+                                      {contact.firstName}
+                                      {contact.lastName ? ` ${contact.lastName}` : ''}
+                                    </span>
+                                    {contact.email ? (
+                                      <span className="ml-auto text-xs text-muted-foreground">{contact.email}</span>
+                                    ) : null}
+                                  </CommandItem>
+                                ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                        <div className="border-t px-3 py-2">
+                          <Select value={contactRole} onValueChange={setContactRole}>
+                            <SelectTrigger className="h-8 text-xs">
+                              <SelectValue placeholder="Role (optional)" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Decision Maker">Decision Maker</SelectItem>
+                              <SelectItem value="Champion">Champion</SelectItem>
+                              <SelectItem value="Influencer">Influencer</SelectItem>
+                              <SelectItem value="User">User</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+
+                  {/* Linked contacts list */}
+                  {dealContacts === undefined ? (
+                    <div className="flex justify-center py-8">
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                    </div>
+                  ) : dealContacts.length === 0 ? (
+                    <p className="py-4 text-center text-sm text-muted-foreground">No contacts linked yet.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {dealContacts.map((contact) => (
+                        <div
+                          key={contact._id}
+                          className="flex items-center justify-between rounded-md border border-border/70 bg-muted/20 p-3"
+                        >
+                          <div className="min-w-0 flex-1">
+                            <button
+                              type="button"
+                              className="text-sm font-medium text-foreground hover:text-orange-600 hover:underline"
+                              onClick={() => onOpenContact?.(contact._id)}
+                            >
+                              {contact.firstName}
+                              {contact.lastName ? ` ${contact.lastName}` : ''}
+                            </button>
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                              {contact.email ? <span>{contact.email}</span> : null}
+                              {contact.title ? <span>{contact.title}</span> : null}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                              onClick={() => onOpenContact?.(contact._id)}
+                              aria-label="Open linked contact"
+                            >
+                              <ArrowUpRight className="h-3.5 w-3.5" />
+                            </Button>
+                            {contact.role ? (
+                              <Badge variant="secondary" className="text-xs">
+                                {contact.role}
+                              </Badge>
+                            ) : null}
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                              onClick={async () => {
+                                if (!dealId) return;
+                                await unlinkContact({ dealId, contactId: contact._id });
+                              }}
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </Button>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          {contact.role ? (
-                            <Badge variant="secondary" className="text-xs">
-                              {contact.role}
-                            </Badge>
-                          ) : null}
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                            onClick={async () => {
-                              if (!dealId) return;
-                              await unlinkContact({ dealId, contactId: contact._id });
-                            }}
-                          >
-                            <X className="h-3.5 w-3.5" />
-                          </Button>
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="company" className="mt-4 min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
+                  {/* Link company combobox */}
+                  <div className="flex items-center gap-2">
+                    <Popover open={companyPopoverOpen} onOpenChange={setCompanyPopoverOpen}>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" size="sm" className="gap-1">
+                          <Plus className="h-3.5 w-3.5" />
+                          Link Company
+                          <ChevronsUpDown className="h-3.5 w-3.5 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[280px] p-0" align="start">
+                        <Command>
+                          <CommandInput placeholder="Search companies..." />
+                          <CommandList>
+                            <CommandEmpty>No companies found.</CommandEmpty>
+                            <CommandGroup>
+                              {(allCompanies ?? [])
+                                .filter((c) => !dealCompanies?.some((dc) => dc._id === c._id))
+                                .map((company) => (
+                                  <CommandItem
+                                    key={company._id}
+                                    value={`${company.name} ${company.industry ?? ''}`}
+                                    onSelect={async () => {
+                                      if (!dealId) return;
+                                      await linkCompany({
+                                        dealId,
+                                        companyId: company._id,
+                                        relationshipType: companyRelType || undefined,
+                                      });
+                                      setCompanyPopoverOpen(false);
+                                      setCompanyRelType('');
+                                    }}
+                                  >
+                                    <span>{company.name}</span>
+                                    {company.industry ? (
+                                      <span className="ml-auto text-xs text-muted-foreground">{company.industry}</span>
+                                    ) : null}
+                                  </CommandItem>
+                                ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                        <div className="border-t px-3 py-2">
+                          <Select value={companyRelType} onValueChange={setCompanyRelType}>
+                            <SelectTrigger className="h-8 text-xs">
+                              <SelectValue placeholder="Relationship (optional)" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Customer">Customer</SelectItem>
+                              <SelectItem value="Partner">Partner</SelectItem>
+                              <SelectItem value="Vendor">Vendor</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
-                      </div>
-                    ))}
+                      </PopoverContent>
+                    </Popover>
                   </div>
-                )}
-              </TabsContent>
 
-              <TabsContent value="company" className="mt-4 space-y-4">
-                {/* Link company combobox */}
-                <div className="flex items-center gap-2">
-                  <Popover open={companyPopoverOpen} onOpenChange={setCompanyPopoverOpen}>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" size="sm" className="gap-1">
-                        <Plus className="h-3.5 w-3.5" />
-                        Link Company
-                        <ChevronsUpDown className="h-3.5 w-3.5 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[280px] p-0" align="start">
-                      <Command>
-                        <CommandInput placeholder="Search companies..." />
-                        <CommandList>
-                          <CommandEmpty>No companies found.</CommandEmpty>
-                          <CommandGroup>
-                            {(allCompanies ?? [])
-                              .filter((c) => !dealCompanies?.some((dc) => dc._id === c._id))
-                              .map((company) => (
-                                <CommandItem
-                                  key={company._id}
-                                  value={`${company.name} ${company.industry ?? ''}`}
-                                  onSelect={async () => {
-                                    if (!dealId) return;
-                                    await linkCompany({
-                                      dealId,
-                                      companyId: company._id,
-                                      relationshipType: companyRelType || undefined,
-                                    });
-                                    setCompanyPopoverOpen(false);
-                                    setCompanyRelType('');
-                                  }}
-                                >
-                                  <span>{company.name}</span>
-                                  {company.industry ? (
-                                    <span className="ml-auto text-xs text-muted-foreground">{company.industry}</span>
-                                  ) : null}
-                                </CommandItem>
-                              ))}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                      <div className="border-t px-3 py-2">
-                        <Select value={companyRelType} onValueChange={setCompanyRelType}>
-                          <SelectTrigger className="h-8 text-xs">
-                            <SelectValue placeholder="Relationship (optional)" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Customer">Customer</SelectItem>
-                            <SelectItem value="Partner">Partner</SelectItem>
-                            <SelectItem value="Vendor">Vendor</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </PopoverContent>
-                  </Popover>
-                </div>
-
-                {/* Linked companies list */}
-                {dealCompanies === undefined ? (
-                  <div className="flex justify-center py-8">
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                  </div>
-                ) : dealCompanies.length === 0 ? (
-                  <p className="py-4 text-center text-sm text-muted-foreground">No companies linked yet.</p>
-                ) : (
-                  <div className="space-y-2">
-                    {dealCompanies.map((company) => (
-                      <div
-                        key={company._id}
-                        className="flex items-center justify-between rounded-md border border-border/70 bg-muted/20 p-3"
-                      >
-                        <div className="min-w-0 flex-1">
-                          <button
-                            type="button"
-                            className="text-sm font-medium text-foreground hover:text-orange-600 hover:underline"
-                            onClick={() => onOpenCompany?.(company._id)}
-                          >
-                            {company.name}
-                          </button>
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            {company.website ? <span>{company.website}</span> : null}
-                            {company.industry ? <span>{company.industry}</span> : null}
+                  {/* Linked companies list */}
+                  {dealCompanies === undefined ? (
+                    <div className="flex justify-center py-8">
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                    </div>
+                  ) : dealCompanies.length === 0 ? (
+                    <p className="py-4 text-center text-sm text-muted-foreground">No companies linked yet.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {dealCompanies.map((company) => (
+                        <div
+                          key={company._id}
+                          className="flex items-center justify-between rounded-md border border-border/70 bg-muted/20 p-3"
+                        >
+                          <div className="min-w-0 flex-1">
+                            <button
+                              type="button"
+                              className="text-sm font-medium text-foreground hover:text-orange-600 hover:underline"
+                              onClick={() => onOpenCompany?.(company._id)}
+                            >
+                              {company.name}
+                            </button>
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                              {company.website ? <span>{company.website}</span> : null}
+                              {company.industry ? <span>{company.industry}</span> : null}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                              onClick={() => onOpenCompany?.(company._id)}
+                              aria-label="Open linked company"
+                            >
+                              <ArrowUpRight className="h-3.5 w-3.5" />
+                            </Button>
+                            {company.relationshipType ? (
+                              <Badge variant="secondary" className="text-xs">
+                                {company.relationshipType}
+                              </Badge>
+                            ) : null}
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                              onClick={async () => {
+                                if (!dealId) return;
+                                await unlinkCompany({ dealId, companyId: company._id });
+                              }}
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </Button>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          {company.relationshipType ? (
-                            <Badge variant="secondary" className="text-xs">
-                              {company.relationshipType}
-                            </Badge>
-                          ) : null}
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                            onClick={async () => {
-                              if (!dealId) return;
-                              await unlinkCompany({ dealId, companyId: company._id });
-                            }}
-                          >
-                            <X className="h-3.5 w-3.5" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </TabsContent>
-            </Tabs>
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
+              </Tabs>
 
-            <DialogFooter className="mt-4">
-              <div className="flex w-full items-center gap-2">
-                <Select value={activityType} onValueChange={(value) => setActivityType(value as typeof activityType)}>
-                  <SelectTrigger className="w-[110px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="note">Note</SelectItem>
-                    <SelectItem value="call">Call</SelectItem>
-                    <SelectItem value="email">Email</SelectItem>
-                    <SelectItem value="meeting">Meeting</SelectItem>
-                    <SelectItem value="task">Task</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Input
-                  placeholder="Log an activity..."
-                  value={activityTitle}
-                  onChange={(event) => setActivityTitle(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter') handleLogActivity();
-                  }}
-                  className="flex-1"
-                />
-                <Button
-                  onClick={handleLogActivity}
-                  disabled={!activityTitle.trim()}
-                  className="bg-orange-500 text-white hover:bg-orange-600"
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-            </DialogFooter>
-          </>
+              <DialogFooter className="mt-4 border-t pt-4">
+                <div className="flex w-full items-center gap-2">
+                  <Select value={activityType} onValueChange={(value) => setActivityType(value as typeof activityType)}>
+                    <SelectTrigger className="w-[110px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="note">Note</SelectItem>
+                      <SelectItem value="call">Call</SelectItem>
+                      <SelectItem value="email">Email</SelectItem>
+                      <SelectItem value="meeting">Meeting</SelectItem>
+                      <SelectItem value="task">Task</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Input
+                    placeholder="Log an activity..."
+                    value={activityTitle}
+                    onChange={(event) => setActivityTitle(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter') handleLogActivity();
+                    }}
+                    className="flex-1"
+                  />
+                  <Button
+                    onClick={handleLogActivity}
+                    disabled={!activityTitle.trim()}
+                    className="bg-orange-500 text-white hover:bg-orange-600"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+              </DialogFooter>
+            </div>
+          </div>
         )}
       </DialogContent>
     </Dialog>

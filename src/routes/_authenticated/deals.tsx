@@ -1,20 +1,34 @@
+// src/routes/_authenticated/deals.tsx
 import { createFileRoute } from '@tanstack/react-router';
 import { useMutation, useQuery } from 'convex/react';
-import { Loader2, Plus } from 'lucide-react';
+import { Loader2, Plus, Search, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '../../../convex/_generated/api';
 import type { Id } from '../../../convex/_generated/dataModel';
 import type { FormEvent } from 'react';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { CompanyDetailModal } from '@/components/crm/company-detail-modal';
+import { ContactDetailModal } from '@/components/crm/contact-detail-modal';
 import { DealDetailModal } from '@/components/crm/deal-detail-modal';
+import { useModalTransition } from '@/hooks/use-modal-transition';
 
 export const Route = createFileRoute('/_authenticated/deals')({
   component: DealsPage,
 });
+
+type StatusFilter = 'all' | 'open' | 'won' | 'lost';
+type SortOption = 'created-desc' | 'created-asc' | 'value-desc' | 'value-asc' | 'close-date-asc' | 'close-date-desc';
+type ActiveModal =
+  | { type: 'deal'; id: Id<'deals'> }
+  | { type: 'contact'; id: Id<'contacts'> }
+  | { type: 'company'; id: Id<'companies'> }
+  | null;
 
 function DealsPage() {
   const ensureDefaultPipeline = useMutation(api.crm.pipelines.ensureDefaultPipeline);
@@ -27,10 +41,17 @@ function DealsPage() {
   );
   const deals = useQuery(api.crm.deals.listDeals);
 
+  // Form state
   const [title, setTitle] = useState('');
   const [value, setValue] = useState('');
   const [stageId, setStageId] = useState('');
-  const [selectedDealId, setSelectedDealId] = useState<Id<'deals'> | null>(null);
+  const { activeModal, openModal, closeModal } = useModalTransition<ActiveModal>();
+
+  // Filter state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [stageFilter, setStageFilter] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<SortOption>('created-desc');
 
   useEffect(() => {
     if (defaultPipeline === null) {
@@ -60,6 +81,64 @@ function DealsPage() {
     setTitle('');
     setValue('');
   };
+
+  // Client-side filtering and sorting
+  const filteredDeals = useMemo(() => {
+    if (!deals) return [];
+
+    let result = [...deals];
+
+    // Search filter: match title
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      result = result.filter((d) => d.title.toLowerCase().includes(q));
+    }
+
+    // Status filter
+    if (statusFilter !== 'all') {
+      result = result.filter((d) => d.status === statusFilter);
+    }
+
+    // Stage filter
+    if (stageFilter !== 'all') {
+      result = result.filter((d) => d.stageId === stageFilter);
+    }
+
+    // Sorting
+    result.sort((a, b) => {
+      switch (sortBy) {
+        case 'created-desc':
+          return b.createdAt - a.createdAt;
+        case 'created-asc':
+          return a.createdAt - b.createdAt;
+        case 'value-desc':
+          return (b.value ?? 0) - (a.value ?? 0);
+        case 'value-asc':
+          return (a.value ?? 0) - (b.value ?? 0);
+        case 'close-date-asc':
+          return (a.expectedCloseDate ?? Number.MAX_SAFE_INTEGER) - (b.expectedCloseDate ?? Number.MAX_SAFE_INTEGER);
+        case 'close-date-desc':
+          return (b.expectedCloseDate ?? 0) - (a.expectedCloseDate ?? 0);
+        default:
+          return 0;
+      }
+    });
+
+    return result;
+  }, [deals, searchQuery, statusFilter, stageFilter, sortBy]);
+
+  const hasActiveFilters = searchQuery.trim().length > 0 || statusFilter !== 'all' || stageFilter !== 'all';
+
+  const clearFilters = () => {
+    setSearchQuery('');
+    setStatusFilter('all');
+    setStageFilter('all');
+    setSortBy('created-desc');
+  };
+
+  const selectedDealId = activeModal?.type === 'deal' ? activeModal.id : null;
+  const selectedContactId = activeModal?.type === 'contact' ? activeModal.id : null;
+  const selectedCompanyId = activeModal?.type === 'company' ? activeModal.id : null;
 
   if (defaultPipeline === undefined || deals === undefined || stages === undefined) {
     return (
@@ -130,31 +209,146 @@ function DealsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>All deals</CardTitle>
-          <CardDescription>{deals.length} deals in this workspace</CardDescription>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <CardTitle>All deals</CardTitle>
+              <CardDescription>
+                {filteredDeals.length}
+                {hasActiveFilters ? ` of ${deals.length}` : ''} deals
+              </CardDescription>
+            </div>
+            {hasActiveFilters && (
+              <Button variant="ghost" size="sm" onClick={clearFilters} className="gap-1">
+                <X className="h-4 w-4" />
+                Clear filters
+              </Button>
+            )}
+          </div>
+          {/* Filter bar */}
+          <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:flex-wrap sm:items-center">
+            <div className="relative flex-1 sm:max-w-xs">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search deals..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            {/* Status toggle */}
+            <div className="flex gap-1 rounded-md border p-1">
+              {(['all', 'open', 'won', 'lost'] as const).map((status) => (
+                <Button
+                  key={status}
+                  variant={statusFilter === status ? 'default' : 'ghost'}
+                  size="sm"
+                  className="h-7 px-2.5 text-xs capitalize"
+                  onClick={() => setStatusFilter(status)}
+                >
+                  {status}
+                </Button>
+              ))}
+            </div>
+            <Select value={stageFilter} onValueChange={setStageFilter}>
+              <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectValue placeholder="All stages" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All stages</SelectItem>
+                {stages.map((stage: { _id: Id<'pipelineStages'>; name: string }) => (
+                  <SelectItem key={stage._id} value={stage._id}>
+                    {stage.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
+              <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="created-desc">Newest first</SelectItem>
+                <SelectItem value="created-asc">Oldest first</SelectItem>
+                <SelectItem value="value-desc">Highest value</SelectItem>
+                <SelectItem value="value-asc">Lowest value</SelectItem>
+                <SelectItem value="close-date-asc">Close date (soonest)</SelectItem>
+                <SelectItem value="close-date-desc">Close date (latest)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </CardHeader>
-        <CardContent className="space-y-2">
+        <CardContent>
           {deals.length === 0 ? (
             <p className="text-sm text-muted-foreground">No deals yet. Create your first one above.</p>
+          ) : filteredDeals.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No deals match your filters.</p>
           ) : (
-            deals.map((deal: { _id: Id<'deals'>; title: string; value?: number }) => (
-              <button
-                key={deal._id}
-                type="button"
-                onClick={() => setSelectedDealId(deal._id)}
-                className="flex w-full items-center justify-between rounded-md border p-3 text-left hover:bg-muted"
-              >
-                <span className="font-medium">{deal.title}</span>
-                <span className="text-muted-foreground text-sm">
-                  {deal.value ? `$${deal.value.toLocaleString()}` : 'No value'}
-                </span>
-              </button>
-            ))
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Title</TableHead>
+                  <TableHead>Value</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Stage</TableHead>
+                  <TableHead>Close Date</TableHead>
+                  <TableHead>Created</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredDeals.map((deal) => {
+                  const stage = stages.find((s: { _id: Id<'pipelineStages'> }) => s._id === deal.stageId);
+                  return (
+                    <TableRow
+                      key={deal._id}
+                      className="cursor-pointer hover:bg-muted/50"
+                      onClick={() => openModal({ type: 'deal', id: deal._id })}
+                    >
+                      <TableCell className="font-medium">{deal.title}</TableCell>
+                      <TableCell>{deal.value != null ? `$${deal.value.toLocaleString()}` : '—'}</TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={
+                            deal.status === 'won' ? 'default' : deal.status === 'lost' ? 'destructive' : 'secondary'
+                          }
+                        >
+                          {deal.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{stage?.name ?? '—'}</TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {deal.expectedCloseDate ? new Date(deal.expectedCloseDate).toLocaleDateString() : '—'}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {new Date(deal.createdAt).toLocaleDateString()}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
           )}
         </CardContent>
       </Card>
 
-      <DealDetailModal dealId={selectedDealId} onClose={() => setSelectedDealId(null)} stages={stages ?? []} />
+      <DealDetailModal
+        dealId={selectedDealId}
+        onClose={closeModal}
+        stages={stages ?? []}
+        onOpenContact={(contactId) => openModal({ type: 'contact', id: contactId })}
+        onOpenCompany={(companyId) => openModal({ type: 'company', id: companyId })}
+      />
+      <ContactDetailModal
+        contactId={selectedContactId}
+        onClose={closeModal}
+        onOpenDeal={(dealId) => openModal({ type: 'deal', id: dealId })}
+        onOpenCompany={(companyId) => openModal({ type: 'company', id: companyId })}
+      />
+      <CompanyDetailModal
+        companyId={selectedCompanyId}
+        onClose={closeModal}
+        onOpenDeal={(dealId) => openModal({ type: 'deal', id: dealId })}
+        onOpenContact={(contactId) => openModal({ type: 'contact', id: contactId })}
+      />
     </div>
   );
 }
