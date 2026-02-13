@@ -19,7 +19,7 @@
     "dev:all": "npm run dev",
     "dev:docs": "cd docs && npm run dev",
     "predev": "convex dev --until-success",
-    "build": "vite build",
+    "build": "node scripts/debug-env.js && vite build",
     "build:docs": "cd docs && npm run build",
     "build:combined": "npm run build && npm run build:docs-combined",
     "build:docs-combined": "cd docs && npm install && npm run build && mkdir -p ../dist/client/docs && cp -r dist/* ../dist/client/docs/",

@@ -6,9 +6,11 @@ import { ConvexReactClient } from 'convex/react';
 import { routeTree } from './routeTree.gen';
 
 export function getRouter() {
-  const CONVEX_URL = (import.meta as any).env.VITE_CONVEX_URL!;
+  const CONVEX_URL = (import.meta as any).env.VITE_CONVEX_URL;
   if (!CONVEX_URL) {
-    throw new Error('missing VITE_CONVEX_URL env var');
+    console.error('[Router Error] VITE_CONVEX_URL is not set');
+    console.error('[Router Error] Available env vars:', Object.keys((import.meta as any).env || {}));
+    throw new Error(`VITE_CONVEX_URL environment variable is required but not set. Available env: ${Object.keys((import.meta as any).env || {}).join(', ')}`);
   }
   const convex = new ConvexReactClient(CONVEX_URL);
   const convexQueryClient = new ConvexQueryClient(convex);
