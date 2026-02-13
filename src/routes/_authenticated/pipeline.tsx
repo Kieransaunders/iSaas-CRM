@@ -4,6 +4,8 @@ import { Loader2, Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { api } from '../../../convex/_generated/api';
 import type { Id } from '../../../convex/_generated/dataModel';
+import { ContactDetailModal } from '@/components/crm/contact-detail-modal';
+import { CompanyDetailModal } from '@/components/crm/company-detail-modal';
 import { DealDetailModal } from '@/components/crm/deal-detail-modal';
 import { PipelineBoard } from '@/components/crm/pipeline-board';
 import { Button } from '@/components/ui/button';
@@ -25,6 +27,8 @@ function PipelinePage() {
   );
 
   const [selectedDealId, setSelectedDealId] = useState<Id<'deals'> | null>(null);
+  const [selectedContactId, setSelectedContactId] = useState<Id<'contacts'> | null>(null);
+  const [selectedCompanyId, setSelectedCompanyId] = useState<Id<'companies'> | null>(null);
 
   useEffect(() => {
     if (defaultPipeline === null) {
@@ -66,7 +70,45 @@ function PipelinePage() {
         </div>
       </div>
 
-      <DealDetailModal dealId={selectedDealId} onClose={() => setSelectedDealId(null)} stages={stages ?? []} />
+      <DealDetailModal
+        dealId={selectedDealId}
+        onClose={() => setSelectedDealId(null)}
+        stages={stages ?? []}
+        onOpenContact={(contactId) => {
+          setSelectedDealId(null);
+          setSelectedContactId(contactId);
+        }}
+        onOpenCompany={(companyId) => {
+          setSelectedDealId(null);
+          setSelectedCompanyId(companyId);
+        }}
+      />
+
+      <ContactDetailModal
+        contactId={selectedContactId}
+        onClose={() => setSelectedContactId(null)}
+        onOpenDeal={(dealId) => {
+          setSelectedContactId(null);
+          setSelectedDealId(dealId);
+        }}
+        onOpenCompany={(companyId) => {
+          setSelectedContactId(null);
+          setSelectedCompanyId(companyId);
+        }}
+      />
+
+      <CompanyDetailModal
+        companyId={selectedCompanyId}
+        onClose={() => setSelectedCompanyId(null)}
+        onOpenDeal={(dealId) => {
+          setSelectedCompanyId(null);
+          setSelectedDealId(dealId);
+        }}
+        onOpenContact={(contactId) => {
+          setSelectedCompanyId(null);
+          setSelectedContactId(contactId);
+        }}
+      />
     </div>
   );
 }
