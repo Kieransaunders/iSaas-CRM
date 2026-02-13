@@ -4,20 +4,22 @@ This document provides essential context for AI coding agents working on the iSa
 
 ## Quick Reference
 
-| Resource             | Location                     | Purpose                         |
-| -------------------- | ---------------------------- | ------------------------------- |
-| **Project Overview** | `LLM.txt` (root)             | Quick context for any LLM       |
-| **AI Rules**         | `.cursor/rules/*.mdc`        | Specific patterns by topic      |
-| **Example Prompts**  | `.cursor/example-prompts.md` | Copy-paste prompts for tasks    |
-| **Requirements**     | `.planning/PROJECT.md`       | Feature requirements & status   |
-| **Troubleshooting**  | `TROUBLESHOOTING.md`         | Common errors and fixes         |
-| **Security**         | `SECURITY.md`                | Security best practices         |
-| **Migrations**       | `MIGRATIONS.md`              | Database migration patterns     |
-| **Deployment**       | `DEPLOYMENT.md`              | Production deployment guide     |
-| **Testing**          | `TESTING.md`                 | Testing patterns and strategies |
-| **API Conventions**  | `API.md`                     | API patterns and conventions    |
-| **Contributing**     | `CONTRIBUTING.md`            | How to contribute               |
-| **Worktree Policy**  | `WORKTREE_POLICY.md`         | Safe planning + merge workflow  |
+| Resource             | Location                     | Purpose                            |
+| -------------------- | ---------------------------- | ---------------------------------- |
+| **Project Overview** | `LLM.txt` (root)             | Quick context for any LLM          |
+| **AI Rules**         | `.cursor/rules/*.mdc`        | Specific patterns by topic         |
+| **Example Prompts**  | `.cursor/example-prompts.md` | Copy-paste prompts for tasks       |
+| **Requirements**     | `.planning/PROJECT.md`       | Feature requirements & status      |
+| **Current TODO**     | `TODO.md`                    | Immediate next tasks               |
+| **Progress Tracker** | `PROGRESS.md`                | Overall completion status          |
+| **Troubleshooting**  | `TROUBLESHOOTING.md`         | Common errors and fixes            |
+| **Security**         | `SECURITY.md`                | Security best practices            |
+| **Migrations**       | `MIGRATIONS.md`              | Database migration patterns        |
+| **Deployment**       | `DEPLOYMENT.md`              | Production deployment guide        |
+| **Testing**          | `TESTING.md`                 | Testing patterns and strategies    |
+| **API Conventions**  | `API.md`                     | API patterns and conventions       |
+| **Contributing**     | `CONTRIBUTING.md`            | How to contribute                  |
+| **Worktree Policy**  | `WORKTREE_POLICY.md`         | **DEPRECATED** - Work in main only |
 
 ## AI-Assisted Development
 
@@ -62,67 +64,77 @@ Use the structured prompts in `.cursor/example-prompts.md` for common tasks like
 - Bug fixes
 - Refactoring
 
-### GSD: Get Shit Done
+### Development Workflow with Superpowers
 
-This project is optimized for **GSD** - a meta-prompting and spec-driven development system that prevents context rot and enables reliable AI-assisted coding.
+This project uses **superpowers** - a simple, effective workflow for AI-assisted development.
 
-**What GSD provides:**
+**Core Principles:**
 
-- Structured project initialization (`/gsd:new-project`)
-- Research → Plan → Execute → Verify workflow
-- Parallel execution with fresh context windows
-- Automatic documentation generation (PROJECT.md, REQUIREMENTS.md, ROADMAP.md)
+1. **Work in Main** - No branches, no worktrees, just main
+2. **Plans in docs/** - Write detailed implementation plans
+3. **Execute with superpowers** - Use skills to implement task-by-task
+4. **Update Progress** - Keep TODO.md and PROGRESS.md current
 
-**Essential GSD Commands:**
+**When to Use Skills:**
 
-| Command                      | When to Use                                          |
-| ---------------------------- | ---------------------------------------------------- |
-| `/gsd:map-codebase`          | Starting work on existing code - analyzes structure  |
-| `/gsd:new-project`           | Starting a new project or major feature              |
-| `/gsd:discuss-phase <phase>` | Before planning - clarify implementation preferences |
-| `/gsd:plan-phase <phase>`    | Create detailed execution plans                      |
-| `/gsd:execute-phase <phase>` | Execute plans with fresh context                     |
-| `/gsd:verify-phase <phase>`  | Verify implementation meets goals                    |
-| `/gsd:checkpoint`            | Review progress and decide next steps                |
+| Situation                        | Skill to Use                                                   |
+| -------------------------------- | -------------------------------------------------------------- |
+| Have a written plan to implement | `superpowers:executing-plans`                                  |
+| Starting a new feature           | `superpowers:writing-plans` then `superpowers:executing-plans` |
+| Hit a bug                        | `superpowers:systematic-debugging`                             |
+| Code review feedback             | `superpowers:receiving-code-review`                            |
+| Done with feature                | `superpowers:finishing-a-development-branch`                   |
 
-**GSD Principles for This Project:**
+**Simple Workflow:**
 
-1. **Vertical Slices** - Build features end-to-end, not layer by layer
-2. **Spec Before Code** - Document requirements in `.planning/` before implementation
-3. **Fresh Context** - Use small, focused plans executed in fresh context windows
-4. **Verify Early** - Check against goals after each phase
-5. **Ship Working** - Prefer working code over perfect abstraction
+1. **Plan**: Write detailed plan in `docs/plans/YYYY-MM-DD-feature-name.md`
+2. **Track**: Add tasks to `TODO.md` and overview to `PROGRESS.md`
+3. **Execute**: Use `superpowers:executing-plans` to implement
+4. **Update**: After each task, update TODO.md and PROGRESS.md
+5. **Complete**: Use `superpowers:finishing-a-development-branch` to wrap up
 
-**Installation:**
+**Plan Structure:**
 
-```bash
-# For local project use (recommended)
-npx get-shit-done-cc@latest --claude --local
+Plans should be in `docs/plans/` with format: `YYYY-MM-DD-feature-name.md`
 
-# Or globally
-npx get-shit-done-cc@latest --claude --global
+Each plan should have:
 
-# Verify
-/gsd:help
-```
+- Clear goal
+- Architecture overview
+- Numbered tasks with exact steps
+- Verification commands
 
-**GSD Project Structure:**
+## Progress Tracking for Human Visibility
 
-```
-.planning/
-├── PROJECT.md              # Project overview and goals
-├── REQUIREMENTS.md         # Extracted requirements
-├── ROADMAP.md              # Execution phases
-├── STATE.md                # Current progress
-├── research/               # Research findings
-├── [phase]-CONTEXT.md      # Phase preferences
-├── [phase]-RESEARCH.md     # Phase research
-├── [phase]-[N]-PLAN.md     # Execution plans
-├── [phase]-[N]-SUMMARY.md  # Execution summaries
-└── [phase]-VERIFICATION.md # Phase verification
-```
+When implementing features, you MUST update the human-readable progress files:
 
-**Reference:** [github.com/glittercowboy/get-shit-done](https://github.com/glittercowboy/get-shit-done)
+### Required Updates
+
+**After completing ANY task:**
+
+1. Read `PROGRESS.md`
+2. Mark completed tasks with `[x]`
+3. Write file back
+4. Read `TODO.md`
+5. Remove completed items or mark as done
+6. Write file back
+
+### Branch Policy
+
+**CRITICAL:** Work ONLY in the main branch.
+
+- ✅ DO: Work directly in `/Users/boss/Develpment/iSaas-CRM` (main branch)
+- ❌ NEVER: Create worktrees or feature branches
+- ❌ NEVER: Use `git worktree` commands
+- ✅ DO: Commit frequently to main with descriptive messages
+
+### Workflow
+
+1. Start in main: `git checkout main && git pull`
+2. Complete tasks from `TODO.md`
+3. Update `PROGRESS.md` and `TODO.md` after each task
+4. Commit: `git add . && git commit -m "feat: what you did"`
+5. Report progress to human
 
 ## Project Overview
 

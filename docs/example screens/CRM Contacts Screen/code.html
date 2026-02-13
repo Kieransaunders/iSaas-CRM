@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CRM Contact Directory</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#f7951d",
+                        "background-light": "#f8f7f5",
+                        "background-dark": "#231a0f",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen flex justify-center">
+<!-- Mobile Screen Container -->
+<div class="w-full max-w-md bg-white dark:bg-zinc-900 min-h-screen shadow-2xl relative flex flex-col overflow-hidden">
+<!-- Header Section -->
+<header class="pt-12 pb-4 px-4 sticky top-0 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md z-30">
+<div class="flex items-center justify-between mb-4">
+<h1 class="text-2xl font-bold tracking-tight">Contacts</h1>
+<button class="w-10 h-10 flex items-center justify-center rounded-full bg-primary/10 text-primary">
+<span class="material-icons text-xl">tune</span>
+</button>
+</div>
+<!-- Search Bar -->
+<div class="relative flex items-center">
+<span class="material-icons absolute left-3 text-slate-400">search</span>
+<input class="w-full pl-10 pr-4 py-3 bg-slate-100 dark:bg-zinc-800 border-none rounded-xl focus:ring-2 focus:ring-primary text-sm transition-all" placeholder="Search contacts..." type="text"/>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="flex-1 overflow-y-auto hide-scrollbar pb-24">
+<!-- Alphabetical Index Side Bar -->
+<div class="fixed right-2 top-1/2 -translate-y-1/2 flex flex-col items-center gap-1 z-40">
+<a class="text-[10px] font-bold text-primary hover:text-primary/70" href="#A">A</a>
+<a class="text-[10px] font-bold text-slate-400 hover:text-primary" href="#B">B</a>
+<a class="text-[10px] font-bold text-slate-400 hover:text-primary" href="#C">C</a>
+<a class="text-[10px] font-bold text-slate-400 hover:text-primary" href="#D">D</a>
+<a class="text-[10px] font-bold text-slate-400 hover:text-primary" href="#E">E</a>
+<a class="text-[10px] font-bold text-slate-400 hover:text-primary" href="#F">F</a>
+<a class="text-[10px] font-bold text-slate-400 hover:text-primary" href="#G">G</a>
+<span class="text-[10px] font-bold text-slate-300">•</span>
+<span class="text-[10px] font-bold text-slate-300">•</span>
+<a class="text-[10px] font-bold text-slate-400 hover:text-primary" href="#Z">Z</a>
+</div>
+<!-- Group A -->
+<section id="A">
+<div class="px-4 py-2 bg-slate-50 dark:bg-zinc-800/50 text-xs font-bold text-slate-500 uppercase tracking-widest sticky top-32 z-20">A</div>
+<!-- Contact Item -->
+<div class="flex items-center gap-4 px-4 py-4 border-b border-slate-100 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-800/30 transition-colors">
+<div class="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-orange-600 flex items-center justify-center text-white font-bold text-lg shadow-sm">
+                        AR
+                    </div>
+<div class="flex-1 min-w-0">
+<h3 class="font-semibold text-slate-900 dark:text-white truncate">Alex Rivera</h3>
+<p class="text-sm text-slate-500 dark:text-slate-400 truncate">TechFlow Inc.</p>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 rounded-full bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all">
+<span class="material-icons text-lg">call</span>
+</button>
+<button class="p-2 rounded-full bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all">
+<span class="material-icons text-lg">mail</span>
+</button>
+</div>
+</div>
+<!-- Contact Item -->
+<div class="flex items-center gap-4 px-4 py-4 border-b border-slate-100 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-800/30 transition-colors">
+<img alt="Profile" class="w-12 h-12 rounded-full object-cover shadow-sm" data-alt="Professional headshot of a smiling woman" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDQBzblr9p_PnxM2QouKJFJW5rMUoyhunuya_7kXSgpCDNOsP2WHnDNyvh9ePO6g6MhFKo4OLv2BAa4iNeYjaMnVup77tNE4Uufnh_kdnnpsGABXpNfp__h2Hl0d2Itbih5GFpEvQR5et97OlDUlivt6uXXfanNdi8jZNM-1dtadA6Iw6s5tcFw_UyvmgqvjQnyaIUJwPlxmLfVhr3T0A8D7mBLYCnU7XxXSEwFwVl8FIOtyNSbC6VjATBzo8CSn0D6X0ZBTBDNqE2r"/>
+<div class="flex-1 min-w-0">
+<h3 class="font-semibold text-slate-900 dark:text-white truncate">Ananya Singh</h3>
+<p class="text-sm text-slate-500 dark:text-slate-400 truncate">Design Dynamics</p>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 rounded-full bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all">
+<span class="material-icons text-lg">chat</span>
+</button>
+<button class="p-2 rounded-full bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all">
+<span class="material-icons text-lg">call</span>
+</button>
+</div>
+</div>
+</section>
+<!-- Group B -->
+<section id="B">
+<div class="px-4 py-2 bg-slate-50 dark:bg-zinc-800/50 text-xs font-bold text-slate-500 uppercase tracking-widest sticky top-32 z-20">B</div>
+<!-- Contact Item -->
+<div class="flex items-center gap-4 px-4 py-4 border-b border-slate-100 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-800/30 transition-colors">
+<div class="w-12 h-12 rounded-full bg-slate-200 dark:bg-zinc-700 flex items-center justify-center text-slate-600 dark:text-slate-300 font-bold text-lg">
+                        BV
+                    </div>
+<div class="flex-1 min-w-0">
+<h3 class="font-semibold text-slate-900 dark:text-white truncate">Beatrice Vance</h3>
+<p class="text-sm text-slate-500 dark:text-slate-400 truncate">Global Logistics</p>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 rounded-full bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all">
+<span class="material-icons text-lg">mail</span>
+</button>
+</div>
+</div>
+<!-- Contact Item -->
+<div class="flex items-center gap-4 px-4 py-4 border-b border-slate-100 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-800/30 transition-colors">
+<img alt="Profile" class="w-12 h-12 rounded-full object-cover shadow-sm" data-alt="Portrait of a businessman in a suit" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCzqhnlE72qUyFvhqW5WpDv0LYyd_UCm70dwYFstqojTAB2p-TFhoBTcynUMHt53eZvPAW0NvD2Su_aJh-1JSrWWSXei13bDJSkZAddZD1A2dPUSws3lFqcPXX8u2FqqCAtyFc2pJ2ffjlFmSboTMK9mDMP3pEvekqQFi49pRAJtSGJ42iwxBCmvwqJ5sum2vpvcFTM15Q2OR-QhQnULZ8fUS4PMX2DAK3TBI7Ie7tDedKA7Lo6zoc2mvsrKQz4otGxkYeiacvh1UdU"/>
+<div class="flex-1 min-w-0">
+<h3 class="font-semibold text-slate-900 dark:text-white truncate">Brandon Miller</h3>
+<p class="text-sm text-slate-500 dark:text-slate-400 truncate">Skyline Real Estate</p>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 rounded-full bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all">
+<span class="material-icons text-lg">call</span>
+</button>
+<button class="p-2 rounded-full bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all">
+<span class="material-icons text-lg">chat</span>
+</button>
+</div>
+</div>
+</section>
+<!-- Group C -->
+<section id="C">
+<div class="px-4 py-2 bg-slate-50 dark:bg-zinc-800/50 text-xs font-bold text-slate-500 uppercase tracking-widest sticky top-32 z-20">C</div>
+<!-- Contact Item -->
+<div class="flex items-center gap-4 px-4 py-4 border-b border-slate-100 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-800/30 transition-colors">
+<div class="w-12 h-12 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center text-primary font-bold text-lg">
+                        CH
+                    </div>
+<div class="flex-1 min-w-0">
+<h3 class="font-semibold text-slate-900 dark:text-white truncate">Chloe Henderson</h3>
+<p class="text-sm text-slate-500 dark:text-slate-400 truncate">Marketly SEO</p>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 rounded-full bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all">
+<span class="material-icons text-lg">call</span>
+</button>
+<button class="p-2 rounded-full bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all">
+<span class="material-icons text-lg">mail</span>
+</button>
+<button class="p-2 rounded-full bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all">
+<span class="material-icons text-lg">chat</span>
+</button>
+</div>
+</div>
+</section>
+<!-- Group D -->
+<section id="D">
+<div class="px-4 py-2 bg-slate-50 dark:bg-zinc-800/50 text-xs font-bold text-slate-500 uppercase tracking-widest sticky top-32 z-20">D</div>
+<!-- Contact Item -->
+<div class="flex items-center gap-4 px-4 py-4 border-b border-slate-100 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-800/30 transition-colors">
+<img alt="Profile" class="w-12 h-12 rounded-full object-cover shadow-sm" data-alt="Friendly man with beard smiling" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC9OVA28H3FURq_fqsf3PhoU6UutxYbNijsI4Hj0IdhzsCE2Y3ZtPkvEQcR4v-OPx641_X0kRtiH2jqDcydiP1-nroRmRmLTzSkSnpuba1dkXWb4SVTKo_srHqaEQVlo2Yiqs363yG3pFxG3geNvuKrkU1qsfjKJsly-qwPtCYgvGV8OEMmIzv9dwlPKqo9LcYz_qf1MhhkIOW4IyfB4OQoy6XkRmlNWZv18X9anEIWYd2a17uL2p-Q8eHbxibQXoIglbaspp2euQ3E"/>
+<div class="flex-1 min-w-0">
+<h3 class="font-semibold text-slate-900 dark:text-white truncate">David Chen</h3>
+<p class="text-sm text-slate-500 dark:text-slate-400 truncate">Quantum Leap Tech</p>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 rounded-full bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all">
+<span class="material-icons text-lg">call</span>
+</button>
+</div>
+</div>
+</section>
+</main>
+<!-- Floating Action Button -->
+<button class="fixed bottom-24 right-6 w-14 h-14 rounded-full bg-primary shadow-lg shadow-primary/40 flex items-center justify-center text-white z-50 hover:scale-105 active:scale-95 transition-transform">
+<span class="material-icons text-3xl">add</span>
+</button>
+<!-- Bottom Navigation (iOS Style) -->
+<nav class="absolute bottom-0 left-0 right-0 h-20 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-xl border-t border-slate-200 dark:border-zinc-800 flex items-center justify-around px-6 pb-4 z-40">
+<button class="flex flex-col items-center gap-1 text-slate-400">
+<span class="material-icons">dashboard</span>
+<span class="text-[10px] font-medium">Deals</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-primary">
+<span class="material-icons">person</span>
+<span class="text-[10px] font-medium">Contacts</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-slate-400">
+<span class="material-icons">task_alt</span>
+<span class="text-[10px] font-medium">Tasks</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-slate-400">
+<span class="material-icons">more_horiz</span>
+<span class="text-[10px] font-medium">More</span>
+</button>
+</nav>
+</div>
+</body></html>

@@ -17,6 +17,7 @@ import type * as crm_companies from "../crm/companies.js";
 import type * as crm_contacts from "../crm/contacts.js";
 import type * as crm_deals from "../crm/deals.js";
 import type * as crm_pipelines from "../crm/pipelines.js";
+import type * as crm_relationships from "../crm/relationships.js";
 import type * as http from "../http.js";
 import type * as invitations_internal from "../invitations/internal.js";
 import type * as invitations_manage from "../invitations/manage.js";
@@ -59,6 +60,7 @@ declare const fullApi: ApiFromModules<{
   "crm/contacts": typeof crm_contacts;
   "crm/deals": typeof crm_deals;
   "crm/pipelines": typeof crm_pipelines;
+  "crm/relationships": typeof crm_relationships;
   http: typeof http;
   "invitations/internal": typeof invitations_internal;
   "invitations/manage": typeof invitations_manage;
