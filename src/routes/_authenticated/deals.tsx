@@ -1,4 +1,4 @@
-import { Link, createFileRoute } from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router';
 import { useMutation, useQuery } from 'convex/react';
 import { Loader2, Plus } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { DealDetailModal } from '@/components/crm/deal-detail-modal';
 
 export const Route = createFileRoute('/_authenticated/deals')({
   component: DealsPage,
@@ -29,6 +30,7 @@ function DealsPage() {
   const [title, setTitle] = useState('');
   const [value, setValue] = useState('');
   const [stageId, setStageId] = useState('');
+  const [selectedDealId, setSelectedDealId] = useState<Id<'deals'> | null>(null);
 
   useEffect(() => {
     if (defaultPipeline === null) {
@@ -136,21 +138,23 @@ function DealsPage() {
             <p className="text-sm text-muted-foreground">No deals yet. Create your first one above.</p>
           ) : (
             deals.map((deal: { _id: Id<'deals'>; title: string; value?: number }) => (
-              <Link
+              <button
                 key={deal._id}
-                to="/deals/$dealId"
-                params={{ dealId: deal._id }}
-                className="flex items-center justify-between rounded-md border p-3 hover:bg-muted"
+                type="button"
+                onClick={() => setSelectedDealId(deal._id)}
+                className="flex w-full items-center justify-between rounded-md border p-3 text-left hover:bg-muted"
               >
                 <span className="font-medium">{deal.title}</span>
                 <span className="text-muted-foreground text-sm">
                   {deal.value ? `$${deal.value.toLocaleString()}` : 'No value'}
                 </span>
-              </Link>
+              </button>
             ))
           )}
         </CardContent>
       </Card>
+
+      <DealDetailModal dealId={selectedDealId} onClose={() => setSelectedDealId(null)} stages={stages ?? []} />
     </div>
   );
 }

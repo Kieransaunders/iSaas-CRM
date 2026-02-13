@@ -180,3 +180,35 @@ export const unlinkCompanyFromDeal = mutation({
     await ctx.db.delete('dealCompanies', link._id);
   },
 });
+
+export const listDealCompanies = query({
+  args: {
+    dealId: v.id('deals'),
+  },
+  handler: async (ctx, args) => {
+    const { orgId } = await requireCrmUser(ctx);
+    ensureSameOrgEntity(orgId, await ctx.db.get(args.dealId), 'Deal not found');
+
+    const links = await ctx.db
+      .query('dealCompanies')
+      .withIndex('by_deal', (q) => q.eq('dealId', args.dealId))
+      .collect();
+
+    const companies = await Promise.all(
+      links.map(async (link) => {
+        const company = await ctx.db.get(link.companyId);
+        if (!company) return null;
+        return {
+          _id: company._id,
+          name: company.name,
+          website: company.website,
+          industry: company.industry,
+          relationshipType: link.relationshipType,
+          linkId: link._id,
+        };
+      }),
+    );
+
+    return companies.filter((company) => company !== null);
+  },
+});

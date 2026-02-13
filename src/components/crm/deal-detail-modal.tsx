@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from 'convex/react';
-import { Calendar, DollarSign, Loader2, Plus, Trash2 } from 'lucide-react';
+import { Calendar, DollarSign, Loader2, Plus, Trash2, X } from 'lucide-react';
 import type { Id } from '../../../convex/_generated/dataModel';
 import { api } from '../../../convex/_generated/api';
 import {
@@ -47,9 +47,15 @@ export function DealDetailModal({ dealId, onClose, stages }: DealDetailModalProp
   const createActivity = useMutation(api.crm.activities.createActivity);
   const updateDeal = useMutation(api.crm.deals.updateDeal);
   const deleteDeal = useMutation(api.crm.deals.deleteDeal);
+  const dealCompanies = useQuery(api.crm.relationships.listDealCompanies, dealId ? { dealId } : 'skip');
+  const allCompanies = useQuery(api.crm.companies.listCompanies);
+  const linkCompany = useMutation(api.crm.relationships.linkCompanyToDeal);
+  const unlinkCompany = useMutation(api.crm.relationships.unlinkCompanyFromDeal);
 
   const [activityTitle, setActivityTitle] = useState('');
   const [activityType, setActivityType] = useState<'note' | 'call' | 'email' | 'meeting' | 'task'>('note');
+  const [selectedCompanyId, setSelectedCompanyId] = useState('');
+  const [companyRelType, setCompanyRelType] = useState('');
 
   const [isEditing, setIsEditing] = useState(false);
   const [editFields, setEditFields] = useState({
@@ -72,9 +78,7 @@ export function DealDetailModal({ dealId, onClose, stages }: DealDetailModalProp
       title: deal.title ?? '',
       value: deal.value != null ? String(deal.value) : '',
       currency: deal.currency ?? 'USD',
-      expectedCloseDate: deal.expectedCloseDate
-        ? new Date(deal.expectedCloseDate).toISOString().split('T')[0]
-        : '',
+      expectedCloseDate: deal.expectedCloseDate ? new Date(deal.expectedCloseDate).toISOString().split('T')[0] : '',
       notes: deal.notes ?? '',
       status: deal.status ?? 'open',
     });
@@ -103,9 +107,7 @@ export function DealDetailModal({ dealId, onClose, stages }: DealDetailModalProp
       updates.status = editFields.status;
     }
 
-    const newCloseDate = editFields.expectedCloseDate
-      ? new Date(editFields.expectedCloseDate).getTime()
-      : undefined;
+    const newCloseDate = editFields.expectedCloseDate ? new Date(editFields.expectedCloseDate).getTime() : undefined;
     if (newCloseDate !== deal.expectedCloseDate) {
       if (newCloseDate !== undefined) updates.expectedCloseDate = newCloseDate;
     }
@@ -142,6 +144,17 @@ export function DealDetailModal({ dealId, onClose, stages }: DealDetailModalProp
     onClose();
   };
 
+  const handleLinkCompany = async () => {
+    if (!dealId || !selectedCompanyId) return;
+    await linkCompany({
+      dealId,
+      companyId: selectedCompanyId as Id<'companies'>,
+      relationshipType: companyRelType || undefined,
+    });
+    setSelectedCompanyId('');
+    setCompanyRelType('');
+  };
+
   return (
     <Dialog open={!!dealId} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
@@ -164,7 +177,11 @@ export function DealDetailModal({ dealId, onClose, stages }: DealDetailModalProp
                 </Badge>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button variant="ghost" size="icon" className="ml-auto h-8 w-8 text-destructive hover:text-destructive">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="ml-auto h-8 w-8 text-destructive hover:text-destructive"
+                    >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </AlertDialogTrigger>
@@ -172,13 +189,16 @@ export function DealDetailModal({ dealId, onClose, stages }: DealDetailModalProp
                     <AlertDialogHeader>
                       <AlertDialogTitle>Delete deal</AlertDialogTitle>
                       <AlertDialogDescription>
-                        Are you sure you want to delete &quot;{deal.title}&quot;? This will also remove all
-                        associated activities, contact links, and company links. This action cannot be undone.
+                        Are you sure you want to delete &quot;{deal.title}&quot;? This will also remove all associated
+                        activities, contact links, and company links. This action cannot be undone.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                      <AlertDialogAction
+                        onClick={handleDelete}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      >
                         Delete
                       </AlertDialogAction>
                     </AlertDialogFooter>
@@ -275,7 +295,9 @@ export function DealDetailModal({ dealId, onClose, stages }: DealDetailModalProp
                         <Label htmlFor="edit-status">Status</Label>
                         <Select
                           value={editFields.status}
-                          onValueChange={(value) => setEditFields({ ...editFields, status: value as 'open' | 'won' | 'lost' })}
+                          onValueChange={(value) =>
+                            setEditFields({ ...editFields, status: value as 'open' | 'won' | 'lost' })
+                          }
                         >
                           <SelectTrigger id="edit-status">
                             <SelectValue />
@@ -321,9 +343,7 @@ export function DealDetailModal({ dealId, onClose, stages }: DealDetailModalProp
                       <div className="space-y-2">
                         <Label>Expected Close Date</Label>
                         <p className="py-2 text-sm font-medium">
-                          {deal.expectedCloseDate
-                            ? new Date(deal.expectedCloseDate).toLocaleDateString()
-                            : '—'}
+                          {deal.expectedCloseDate ? new Date(deal.expectedCloseDate).toLocaleDateString() : '—'}
                         </p>
                       </div>
                     </div>
@@ -332,7 +352,9 @@ export function DealDetailModal({ dealId, onClose, stages }: DealDetailModalProp
                       <Label>Status</Label>
                       <div className="py-2">
                         <Badge
-                          variant={deal.status === 'won' ? 'default' : deal.status === 'lost' ? 'destructive' : 'secondary'}
+                          variant={
+                            deal.status === 'won' ? 'default' : deal.status === 'lost' ? 'destructive' : 'secondary'
+                          }
                         >
                           {deal.status}
                         </Badge>
@@ -372,9 +394,86 @@ export function DealDetailModal({ dealId, onClose, stages }: DealDetailModalProp
               </TabsContent>
 
               <TabsContent value="company" className="mt-4">
-                <p className="py-4 text-center text-sm text-muted-foreground">
-                  No companies linked yet. Company linking will be available in Phase 2.
-                </p>
+                <div className="space-y-4">
+                  <div className="grid gap-2 sm:grid-cols-[1fr_180px_auto]">
+                    <Select value={selectedCompanyId} onValueChange={setSelectedCompanyId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select company to link" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(allCompanies ?? [])
+                          .filter((company) => !dealCompanies?.some((dc) => dc._id === company._id))
+                          .map((company) => (
+                            <SelectItem key={company._id} value={company._id}>
+                              {company.name}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+
+                    <Select value={companyRelType} onValueChange={setCompanyRelType}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Relationship" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Customer">Customer</SelectItem>
+                        <SelectItem value="Partner">Partner</SelectItem>
+                        <SelectItem value="Vendor">Vendor</SelectItem>
+                      </SelectContent>
+                    </Select>
+
+                    <Button
+                      onClick={handleLinkCompany}
+                      disabled={!selectedCompanyId}
+                      className="bg-orange-500 text-white hover:bg-orange-600"
+                    >
+                      Link
+                    </Button>
+                  </div>
+
+                  {dealCompanies === undefined ? (
+                    <div className="flex justify-center py-8">
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                    </div>
+                  ) : dealCompanies.length === 0 ? (
+                    <p className="py-4 text-center text-sm text-muted-foreground">No companies linked yet.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {dealCompanies.map((company) => (
+                        <div
+                          key={company._id}
+                          className="flex items-center justify-between rounded-md border border-border/70 bg-muted/20 p-3"
+                        >
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-medium text-foreground">{company.name}</p>
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                              {company.website ? <span>{company.website}</span> : null}
+                              {company.industry ? <span>{company.industry}</span> : null}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {company.relationshipType ? (
+                              <Badge variant="secondary" className="text-xs">
+                                {company.relationshipType}
+                              </Badge>
+                            ) : null}
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                              onClick={async () => {
+                                if (!dealId) return;
+                                await unlinkCompany({ dealId, companyId: company._id });
+                              }}
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </TabsContent>
             </Tabs>
 
