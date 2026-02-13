@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from 'convex/react';
-import { Calendar, DollarSign, Loader2, Plus, Trash2, X } from 'lucide-react';
+import { Calendar, Check, ChevronsUpDown, DollarSign, Loader2, Plus, Trash2, X } from 'lucide-react';
 import type { Id } from '../../../convex/_generated/dataModel';
 import { api } from '../../../convex/_generated/api';
 import {
@@ -32,14 +32,18 @@ import { Textarea } from '@/components/ui/textarea';
 import { getStageColors } from '@/lib/stage-colors';
 import { cn } from '@/lib/utils';
 import { ActivityTimeline } from './activity-timeline';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 type DealDetailModalProps = {
   dealId: Id<'deals'> | null;
   onClose: () => void;
   stages: Array<{ _id: Id<'pipelineStages'>; name: string }>;
+  onOpenContact?: (contactId: Id<'contacts'>) => void;
+  onOpenCompany?: (companyId: Id<'companies'>) => void;
 };
 
-export function DealDetailModal({ dealId, onClose, stages }: DealDetailModalProps) {
+export function DealDetailModal({ dealId, onClose, stages, onOpenContact, onOpenCompany }: DealDetailModalProps) {
   const deal = useQuery(api.crm.deals.getDeal, dealId ? { dealId } : 'skip');
   const activities = useQuery(api.crm.activities.listDealActivities, dealId ? { dealId } : 'skip');
 
@@ -47,14 +51,21 @@ export function DealDetailModal({ dealId, onClose, stages }: DealDetailModalProp
   const createActivity = useMutation(api.crm.activities.createActivity);
   const updateDeal = useMutation(api.crm.deals.updateDeal);
   const deleteDeal = useMutation(api.crm.deals.deleteDeal);
+  const dealContacts = useQuery(api.crm.relationships.listDealContacts, dealId ? { dealId } : 'skip');
   const dealCompanies = useQuery(api.crm.relationships.listDealCompanies, dealId ? { dealId } : 'skip');
+  const allContacts = useQuery(api.crm.contacts.listContacts);
   const allCompanies = useQuery(api.crm.companies.listCompanies);
+  const linkContact = useMutation(api.crm.relationships.linkContactToDeal);
+  const unlinkContact = useMutation(api.crm.relationships.unlinkContactFromDeal);
   const linkCompany = useMutation(api.crm.relationships.linkCompanyToDeal);
   const unlinkCompany = useMutation(api.crm.relationships.unlinkCompanyFromDeal);
 
+  const [contactPopoverOpen, setContactPopoverOpen] = useState(false);
+  const [companyPopoverOpen, setCompanyPopoverOpen] = useState(false);
+  const [contactRole, setContactRole] = useState('');
+
   const [activityTitle, setActivityTitle] = useState('');
   const [activityType, setActivityType] = useState<'note' | 'call' | 'email' | 'meeting' | 'task'>('note');
-  const [selectedCompanyId, setSelectedCompanyId] = useState('');
   const [companyRelType, setCompanyRelType] = useState('');
 
   const [isEditing, setIsEditing] = useState(false);
@@ -142,17 +153,6 @@ export function DealDetailModal({ dealId, onClose, stages }: DealDetailModalProp
   const handleDelete = async () => {
     await deleteDeal({ dealId });
     onClose();
-  };
-
-  const handleLinkCompany = async () => {
-    if (!dealId || !selectedCompanyId) return;
-    await linkCompany({
-      dealId,
-      companyId: selectedCompanyId as Id<'companies'>,
-      relationshipType: companyRelType || undefined,
-    });
-    setSelectedCompanyId('');
-    setCompanyRelType('');
   };
 
   return (
@@ -387,93 +387,229 @@ export function DealDetailModal({ dealId, onClose, stages }: DealDetailModalProp
                 )}
               </TabsContent>
 
-              <TabsContent value="contacts" className="mt-4">
-                <p className="py-4 text-center text-sm text-muted-foreground">
-                  No contacts linked yet. Contact linking will be available in Phase 2.
-                </p>
-              </TabsContent>
+              <TabsContent value="contacts" className="mt-4 space-y-4">
+                {/* Link contact combobox */}
+                <div className="flex items-center gap-2">
+                  <Popover open={contactPopoverOpen} onOpenChange={setContactPopoverOpen}>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" size="sm" className="gap-1">
+                        <Plus className="h-3.5 w-3.5" />
+                        Link Contact
+                        <ChevronsUpDown className="h-3.5 w-3.5 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[280px] p-0" align="start">
+                      <Command>
+                        <CommandInput placeholder="Search contacts..." />
+                        <CommandList>
+                          <CommandEmpty>No contacts found.</CommandEmpty>
+                          <CommandGroup>
+                            {(allContacts ?? [])
+                              .filter((c) => !dealContacts?.some((dc) => dc._id === c._id))
+                              .map((contact) => (
+                                <CommandItem
+                                  key={contact._id}
+                                  value={`${contact.firstName} ${contact.lastName ?? ''} ${contact.email ?? ''}`}
+                                  onSelect={async () => {
+                                    if (!dealId) return;
+                                    await linkContact({
+                                      dealId,
+                                      contactId: contact._id,
+                                      role: contactRole || undefined,
+                                    });
+                                    setContactPopoverOpen(false);
+                                    setContactRole('');
+                                  }}
+                                >
+                                  <span>
+                                    {contact.firstName}
+                                    {contact.lastName ? ` ${contact.lastName}` : ''}
+                                  </span>
+                                  {contact.email ? (
+                                    <span className="ml-auto text-xs text-muted-foreground">{contact.email}</span>
+                                  ) : null}
+                                </CommandItem>
+                              ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                      <div className="border-t px-3 py-2">
+                        <Select value={contactRole} onValueChange={setContactRole}>
+                          <SelectTrigger className="h-8 text-xs">
+                            <SelectValue placeholder="Role (optional)" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Decision Maker">Decision Maker</SelectItem>
+                            <SelectItem value="Champion">Champion</SelectItem>
+                            <SelectItem value="Influencer">Influencer</SelectItem>
+                            <SelectItem value="User">User</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                </div>
 
-              <TabsContent value="company" className="mt-4">
-                <div className="space-y-4">
-                  <div className="grid gap-2 sm:grid-cols-[1fr_180px_auto]">
-                    <Select value={selectedCompanyId} onValueChange={setSelectedCompanyId}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select company to link" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {(allCompanies ?? [])
-                          .filter((company) => !dealCompanies?.some((dc) => dc._id === company._id))
-                          .map((company) => (
-                            <SelectItem key={company._id} value={company._id}>
-                              {company.name}
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
-
-                    <Select value={companyRelType} onValueChange={setCompanyRelType}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Relationship" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Customer">Customer</SelectItem>
-                        <SelectItem value="Partner">Partner</SelectItem>
-                        <SelectItem value="Vendor">Vendor</SelectItem>
-                      </SelectContent>
-                    </Select>
-
-                    <Button
-                      onClick={handleLinkCompany}
-                      disabled={!selectedCompanyId}
-                      className="bg-orange-500 text-white hover:bg-orange-600"
-                    >
-                      Link
-                    </Button>
+                {/* Linked contacts list */}
+                {dealContacts === undefined ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="h-5 w-5 animate-spin" />
                   </div>
-
-                  {dealCompanies === undefined ? (
-                    <div className="flex justify-center py-8">
-                      <Loader2 className="h-5 w-5 animate-spin" />
-                    </div>
-                  ) : dealCompanies.length === 0 ? (
-                    <p className="py-4 text-center text-sm text-muted-foreground">No companies linked yet.</p>
-                  ) : (
-                    <div className="space-y-2">
-                      {dealCompanies.map((company) => (
-                        <div
-                          key={company._id}
-                          className="flex items-center justify-between rounded-md border border-border/70 bg-muted/20 p-3"
-                        >
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium text-foreground">{company.name}</p>
-                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                              {company.website ? <span>{company.website}</span> : null}
-                              {company.industry ? <span>{company.industry}</span> : null}
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            {company.relationshipType ? (
-                              <Badge variant="secondary" className="text-xs">
-                                {company.relationshipType}
-                              </Badge>
-                            ) : null}
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                              onClick={async () => {
-                                if (!dealId) return;
-                                await unlinkCompany({ dealId, companyId: company._id });
-                              }}
-                            >
-                              <X className="h-3.5 w-3.5" />
-                            </Button>
+                ) : dealContacts.length === 0 ? (
+                  <p className="py-4 text-center text-sm text-muted-foreground">No contacts linked yet.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {dealContacts.map((contact) => (
+                      <div
+                        key={contact._id}
+                        className="flex items-center justify-between rounded-md border border-border/70 bg-muted/20 p-3"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <button
+                            type="button"
+                            className="text-sm font-medium text-foreground hover:text-orange-600 hover:underline"
+                            onClick={() => onOpenContact?.(contact._id)}
+                          >
+                            {contact.firstName}
+                            {contact.lastName ? ` ${contact.lastName}` : ''}
+                          </button>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            {contact.email ? <span>{contact.email}</span> : null}
+                            {contact.title ? <span>{contact.title}</span> : null}
                           </div>
                         </div>
-                      ))}
-                    </div>
-                  )}
+                        <div className="flex items-center gap-2">
+                          {contact.role ? (
+                            <Badge variant="secondary" className="text-xs">
+                              {contact.role}
+                            </Badge>
+                          ) : null}
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                            onClick={async () => {
+                              if (!dealId) return;
+                              await unlinkContact({ dealId, contactId: contact._id });
+                            }}
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="company" className="mt-4 space-y-4">
+                {/* Link company combobox */}
+                <div className="flex items-center gap-2">
+                  <Popover open={companyPopoverOpen} onOpenChange={setCompanyPopoverOpen}>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" size="sm" className="gap-1">
+                        <Plus className="h-3.5 w-3.5" />
+                        Link Company
+                        <ChevronsUpDown className="h-3.5 w-3.5 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[280px] p-0" align="start">
+                      <Command>
+                        <CommandInput placeholder="Search companies..." />
+                        <CommandList>
+                          <CommandEmpty>No companies found.</CommandEmpty>
+                          <CommandGroup>
+                            {(allCompanies ?? [])
+                              .filter((c) => !dealCompanies?.some((dc) => dc._id === c._id))
+                              .map((company) => (
+                                <CommandItem
+                                  key={company._id}
+                                  value={`${company.name} ${company.industry ?? ''}`}
+                                  onSelect={async () => {
+                                    if (!dealId) return;
+                                    await linkCompany({
+                                      dealId,
+                                      companyId: company._id,
+                                      relationshipType: companyRelType || undefined,
+                                    });
+                                    setCompanyPopoverOpen(false);
+                                    setCompanyRelType('');
+                                  }}
+                                >
+                                  <span>{company.name}</span>
+                                  {company.industry ? (
+                                    <span className="ml-auto text-xs text-muted-foreground">{company.industry}</span>
+                                  ) : null}
+                                </CommandItem>
+                              ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                      <div className="border-t px-3 py-2">
+                        <Select value={companyRelType} onValueChange={setCompanyRelType}>
+                          <SelectTrigger className="h-8 text-xs">
+                            <SelectValue placeholder="Relationship (optional)" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Customer">Customer</SelectItem>
+                            <SelectItem value="Partner">Partner</SelectItem>
+                            <SelectItem value="Vendor">Vendor</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                 </div>
+
+                {/* Linked companies list */}
+                {dealCompanies === undefined ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  </div>
+                ) : dealCompanies.length === 0 ? (
+                  <p className="py-4 text-center text-sm text-muted-foreground">No companies linked yet.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {dealCompanies.map((company) => (
+                      <div
+                        key={company._id}
+                        className="flex items-center justify-between rounded-md border border-border/70 bg-muted/20 p-3"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <button
+                            type="button"
+                            className="text-sm font-medium text-foreground hover:text-orange-600 hover:underline"
+                            onClick={() => onOpenCompany?.(company._id)}
+                          >
+                            {company.name}
+                          </button>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            {company.website ? <span>{company.website}</span> : null}
+                            {company.industry ? <span>{company.industry}</span> : null}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {company.relationshipType ? (
+                            <Badge variant="secondary" className="text-xs">
+                              {company.relationshipType}
+                            </Badge>
+                          ) : null}
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                            onClick={async () => {
+                              if (!dealId) return;
+                              await unlinkCompany({ dealId, companyId: company._id });
+                            }}
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </TabsContent>
             </Tabs>
 

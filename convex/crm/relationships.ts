@@ -212,3 +212,36 @@ export const listDealCompanies = query({
     return companies.filter((company) => company !== null);
   },
 });
+
+export const listCompanyDeals = query({
+  args: {
+    companyId: v.id('companies'),
+  },
+  handler: async (ctx, args) => {
+    const { orgId } = await requireCrmUser(ctx);
+    ensureSameOrgEntity(orgId, await ctx.db.get(args.companyId), 'Company not found');
+
+    const links = await ctx.db
+      .query('dealCompanies')
+      .withIndex('by_company', (q) => q.eq('companyId', args.companyId))
+      .collect();
+
+    const deals = await Promise.all(
+      links.map(async (link) => {
+        const deal = await ctx.db.get(link.dealId);
+        if (!deal) return null;
+        return {
+          _id: deal._id,
+          title: deal.title,
+          value: deal.value,
+          currency: deal.currency,
+          status: deal.status,
+          relationshipType: link.relationshipType,
+          linkId: link._id,
+        };
+      }),
+    );
+
+    return deals.filter((deal) => deal !== null);
+  },
+});
