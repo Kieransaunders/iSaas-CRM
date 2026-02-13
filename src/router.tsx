@@ -6,17 +6,17 @@ import { ConvexReactClient } from 'convex/react';
 import { routeTree } from './routeTree.gen';
 
 export function getRouter() {
-  // Support both Vite's import.meta.env and Node's process.env (for SSR/serverless)
-  const CONVEX_URL = (import.meta as any).env?.VITE_CONVEX_URL || (typeof process !== 'undefined' ? process?.env?.VITE_CONVEX_URL : undefined);
+  // For SSR/serverless (Netlify), environment variables are in process.env
+  // For client-side, they're in import.meta.env (injected by Vite)
+  const env = (typeof process !== 'undefined' && process.env) ? process.env : (import.meta as any).env || {};
+  const CONVEX_URL = env.VITE_CONVEX_URL;
   
   if (!CONVEX_URL) {
     console.error('[Router Error] VITE_CONVEX_URL is not set');
-    console.error('[Router Error] import.meta.env:', (import.meta as any).env);
-    console.error('[Router Error] process.env.VITE_CONVEX_URL:', typeof process !== 'undefined' ? process?.env?.VITE_CONVEX_URL : 'process undefined');
-    throw new Error('VITE_CONVEX_URL environment variable is required but not set');
+    console.error('[Router Error] Available env keys:', Object.keys(env).filter(k => k.includes('CONVEX') || k.includes('VITE')));
+    throw new Error('VITE_CONVEX_URL environment variable is required but not set. Check Netlify environment variables.');
   }
   
-  console.log('[Router] Initializing with Convex URL:', CONVEX_URL.substring(0, 30) + '...');
   const convex = new ConvexReactClient(CONVEX_URL);
   const convexQueryClient = new ConvexQueryClient(convex);
 
