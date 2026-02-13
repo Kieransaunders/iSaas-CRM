@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from 'convex/react';
-import { Globe, Loader2, Phone, Plus, Trash2 } from 'lucide-react';
+import { DollarSign, Globe, Loader2, Phone, Plus, Trash2 } from 'lucide-react';
 import type { Id } from '../../../convex/_generated/dataModel';
 import { api } from '../../../convex/_generated/api';
 import {
@@ -36,12 +36,15 @@ const INDUSTRIES = ['Technology', 'Healthcare', 'Finance', 'Retail', 'Manufactur
 type CompanyDetailModalProps = {
   companyId: Id<'companies'> | null;
   onClose: () => void;
+  onOpenDeal?: (dealId: Id<'deals'>) => void;
+  onOpenContact?: (contactId: Id<'contacts'>) => void;
 };
 
-export function CompanyDetailModal({ companyId, onClose }: CompanyDetailModalProps) {
+export function CompanyDetailModal({ companyId, onClose, onOpenDeal, onOpenContact }: CompanyDetailModalProps) {
   const company = useQuery(api.crm.companies.getCompany, companyId ? { companyId } : 'skip');
   const activities = useQuery(api.crm.activities.listCompanyActivities, companyId ? { companyId } : 'skip');
   const contacts = useQuery(api.crm.contacts.listContacts);
+  const companyDeals = useQuery(api.crm.relationships.listCompanyDeals, companyId ? { companyId } : 'skip');
 
   const updateCompany = useMutation(api.crm.companies.updateCompany);
   const deleteCompany = useMutation(api.crm.companies.deleteCompany);
@@ -174,6 +177,7 @@ export function CompanyDetailModal({ companyId, onClose }: CompanyDetailModalPro
               <TabsList>
                 <TabsTrigger value="info">Info</TabsTrigger>
                 <TabsTrigger value="contacts">Contacts ({companyContacts.length})</TabsTrigger>
+                <TabsTrigger value="deals">Deals</TabsTrigger>
                 <TabsTrigger value="activity">Activity</TabsTrigger>
               </TabsList>
 
@@ -284,16 +288,68 @@ export function CompanyDetailModal({ companyId, onClose }: CompanyDetailModalPro
                         key={contact._id}
                         className="rounded-md border border-border/70 bg-muted/20 p-3 text-sm text-foreground"
                       >
-                        <p className="font-medium">
+                        <button
+                          type="button"
+                          className="font-medium text-foreground hover:text-orange-600 hover:underline"
+                          onClick={() => onOpenContact?.(contact._id)}
+                        >
                           {contact.firstName}
                           {contact.lastName ? ` ${contact.lastName}` : ''}
-                        </p>
-                        {contact.email ? (
-                          <p className="text-xs text-muted-foreground">{contact.email}</p>
-                        ) : null}
-                        {contact.title ? (
-                          <p className="text-xs text-muted-foreground">{contact.title}</p>
-                        ) : null}
+                        </button>
+                        {contact.email ? <p className="text-xs text-muted-foreground">{contact.email}</p> : null}
+                        {contact.title ? <p className="text-xs text-muted-foreground">{contact.title}</p> : null}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="deals" className="mt-4">
+                {companyDeals === undefined ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  </div>
+                ) : companyDeals.length === 0 ? (
+                  <p className="py-4 text-center text-sm text-muted-foreground">No deals linked to this company.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {companyDeals.map((deal) => (
+                      <div
+                        key={deal._id}
+                        className="flex items-center justify-between rounded-md border border-border/70 bg-muted/20 p-3"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <button
+                            type="button"
+                            className="text-sm font-medium text-foreground hover:text-orange-600 hover:underline"
+                            onClick={() => onOpenDeal?.(deal._id)}
+                          >
+                            {deal.title}
+                          </button>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            {deal.value ? (
+                              <span className="flex items-center gap-0.5">
+                                <DollarSign className="h-3 w-3" />
+                                {deal.value.toLocaleString()} {deal.currency ?? 'USD'}
+                              </span>
+                            ) : null}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {deal.relationshipType ? (
+                            <Badge variant="secondary" className="text-xs">
+                              {deal.relationshipType}
+                            </Badge>
+                          ) : null}
+                          <Badge
+                            variant={
+                              deal.status === 'won' ? 'default' : deal.status === 'lost' ? 'destructive' : 'secondary'
+                            }
+                            className="text-xs"
+                          >
+                            {deal.status}
+                          </Badge>
+                        </div>
                       </div>
                     ))}
                   </div>
