@@ -10,6 +10,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { CompanyDetailModal } from '@/components/crm/company-detail-modal';
+import { DealDetailModal } from '@/components/crm/deal-detail-modal';
+import { ContactDetailModal } from '@/components/crm/contact-detail-modal';
 
 export const Route = createFileRoute('/_authenticated/companies')({
   component: CompaniesPage,
@@ -22,6 +24,14 @@ function CompaniesPage() {
   const [name, setName] = useState('');
   const [website, setWebsite] = useState('');
   const [selectedCompanyId, setSelectedCompanyId] = useState<Id<'companies'> | null>(null);
+  const [selectedDealId, setSelectedDealId] = useState<Id<'deals'> | null>(null);
+  const [selectedContactId, setSelectedContactId] = useState<Id<'contacts'> | null>(null);
+
+  const defaultPipeline = useQuery(api.crm.pipelines.getDefaultPipeline);
+  const stages = useQuery(
+    api.crm.pipelines.listStagesByPipeline,
+    defaultPipeline ? { pipelineId: defaultPipeline._id } : 'skip',
+  );
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -99,9 +109,7 @@ function CompaniesPage() {
                   >
                     <TableCell className="font-medium">{company.name}</TableCell>
                     <TableCell>
-                      {company.website ? (
-                        <span className="text-muted-foreground">{company.website}</span>
-                      ) : '—'}
+                      {company.website ? <span className="text-muted-foreground">{company.website}</span> : '—'}
                     </TableCell>
                     <TableCell>{company.industry ?? '—'}</TableCell>
                     <TableCell>{company.phone ?? '—'}</TableCell>
@@ -119,6 +127,41 @@ function CompaniesPage() {
       <CompanyDetailModal
         companyId={selectedCompanyId}
         onClose={() => setSelectedCompanyId(null)}
+        onOpenDeal={(dealId) => {
+          setSelectedCompanyId(null);
+          setSelectedDealId(dealId);
+        }}
+        onOpenContact={(contactId) => {
+          setSelectedCompanyId(null);
+          setSelectedContactId(contactId);
+        }}
+      />
+
+      <DealDetailModal
+        dealId={selectedDealId}
+        onClose={() => setSelectedDealId(null)}
+        stages={stages ?? []}
+        onOpenContact={(contactId) => {
+          setSelectedDealId(null);
+          setSelectedContactId(contactId);
+        }}
+        onOpenCompany={(companyId) => {
+          setSelectedDealId(null);
+          setSelectedCompanyId(companyId);
+        }}
+      />
+
+      <ContactDetailModal
+        contactId={selectedContactId}
+        onClose={() => setSelectedContactId(null)}
+        onOpenDeal={(dealId) => {
+          setSelectedContactId(null);
+          setSelectedDealId(dealId);
+        }}
+        onOpenCompany={(companyId) => {
+          setSelectedContactId(null);
+          setSelectedCompanyId(companyId);
+        }}
       />
     </div>
   );

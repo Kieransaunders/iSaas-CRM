@@ -10,6 +10,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ContactDetailModal } from '@/components/crm/contact-detail-modal';
+import { DealDetailModal } from '@/components/crm/deal-detail-modal';
+import { CompanyDetailModal } from '@/components/crm/company-detail-modal';
 
 export const Route = createFileRoute('/_authenticated/contacts')({
   component: ContactsPage,
@@ -24,6 +26,14 @@ function ContactsPage() {
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [selectedContactId, setSelectedContactId] = useState<Id<'contacts'> | null>(null);
+  const [selectedDealId, setSelectedDealId] = useState<Id<'deals'> | null>(null);
+  const [selectedCompanyId, setSelectedCompanyId] = useState<Id<'companies'> | null>(null);
+
+  const defaultPipeline = useQuery(api.crm.pipelines.getDefaultPipeline);
+  const stages = useQuery(
+    api.crm.pipelines.listStagesByPipeline,
+    defaultPipeline ? { pipelineId: defaultPipeline._id } : 'skip',
+  );
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -101,14 +111,13 @@ function ContactsPage() {
                     onClick={() => setSelectedContactId(contact._id)}
                   >
                     <TableCell className="font-medium">
-                      {contact.firstName}{contact.lastName ? ` ${contact.lastName}` : ''}
+                      {contact.firstName}
+                      {contact.lastName ? ` ${contact.lastName}` : ''}
                     </TableCell>
                     <TableCell>{contact.email ?? '—'}</TableCell>
                     <TableCell>{contact.phone ?? '—'}</TableCell>
                     <TableCell>
-                      {contact.companyId
-                        ? companies?.find((c) => c._id === contact.companyId)?.name ?? '—'
-                        : '—'}
+                      {contact.companyId ? (companies?.find((c) => c._id === contact.companyId)?.name ?? '—') : '—'}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {new Date(contact.createdAt).toLocaleDateString()}
@@ -124,6 +133,41 @@ function ContactsPage() {
       <ContactDetailModal
         contactId={selectedContactId}
         onClose={() => setSelectedContactId(null)}
+        onOpenDeal={(dealId) => {
+          setSelectedContactId(null);
+          setSelectedDealId(dealId);
+        }}
+        onOpenCompany={(companyId) => {
+          setSelectedContactId(null);
+          setSelectedCompanyId(companyId);
+        }}
+      />
+
+      <DealDetailModal
+        dealId={selectedDealId}
+        onClose={() => setSelectedDealId(null)}
+        stages={stages ?? []}
+        onOpenContact={(contactId) => {
+          setSelectedDealId(null);
+          setSelectedContactId(contactId);
+        }}
+        onOpenCompany={(companyId) => {
+          setSelectedDealId(null);
+          setSelectedCompanyId(companyId);
+        }}
+      />
+
+      <CompanyDetailModal
+        companyId={selectedCompanyId}
+        onClose={() => setSelectedCompanyId(null)}
+        onOpenDeal={(dealId) => {
+          setSelectedCompanyId(null);
+          setSelectedDealId(dealId);
+        }}
+        onOpenContact={(contactId) => {
+          setSelectedCompanyId(null);
+          setSelectedContactId(contactId);
+        }}
       />
     </div>
   );
