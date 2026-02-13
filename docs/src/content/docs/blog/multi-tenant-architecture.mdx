@@ -1,16 +1,16 @@
 ---
-title: Multi-Tenant Architecture for Client Portals
-description: How iSaaSIT uses multi-tenancy to power your client portal
+title: Multi-Tenant Architecture for CRM SaaS
+description: How iSaaSIT uses multi-tenancy to power client CRM applications
 date: 2026-02-03
 authors:
   - author
 ---
 
-# Multi-Tenant Architecture for Client Portals
+# Multi-Tenant Architecture for CRM SaaS
 
 **Published:** February 3, 2026
 
-Multi-tenancy is the foundation that makes client portals possible. This post explains how it works in iSaaSIT and why it's perfect for agencies building client portals.
+Multi-tenancy is the foundation that makes CRM applications possible. This post explains how it works in iSaaSIT and why it's perfect for agencies building CRMs for their clients.
 
 ## What is Multi-Tenancy?
 
@@ -23,10 +23,11 @@ Multi-tenancy is an architecture where a single instance of software serves mult
 │  ┌─────────┐ ┌─────────┐ ┌────────┐ │
 │  │ Agency A │ │ Agency B │ │ Agency C│ │
 │  │ ┌─────┐ │ │ ┌─────┐ │ │ ┌────┐ │ │
+│  │ │CRM  │ │ │ │CRM  │ │ │ │CRM │ │ │
 │  │ │ C1  │ │ │ │ C1  │ │ │ │ C1 │ │ │
-│  │ │ C2  │ │ │ │ C2  │ │ │ └────┘ │ │
-│  │ └─────┘ │ │ └─────┘ │ └────────┘ │
-│  └─────────┘ └─────────┘            │
+│  │ │ C2  │ │ │ │ C2  │ │ │ │ C2 │ │ │
+│  │ └─────┘ │ │ └─────┘ │ │ └────┘ │ │
+│  └─────────┘ └─────────┘ └────────┘ │
 └─────────────────────────────────────┘
 ```
 
@@ -57,14 +58,15 @@ Multi-tenancy is an architecture where a single instance of software serves mult
 The top-level tenant in iSaaSIT is the Organization (agency). Each organization:
 
 - Has its own subscription and billing
-- Manages its own users and customers
+- Manages its own users and customer CRMs
 - Cannot access other organizations' data
 
 ### Customer Level
 
 Within an organization, Customers provide another layer:
 
-- Each customer is a client company
+- Each customer is a client company with their own CRM data
+- Contacts, deals, and tasks are scoped to customers
 - Staff can be assigned to specific customers
 - Clients only see their own customer data
 
@@ -75,14 +77,23 @@ Within an organization, Customers provide another layer:
 export const listCustomers = query({
   handler: async (ctx) => {
     const org = await getCurrentOrg(ctx);
-    
+
     return await ctx.db
       .query('customers')
-      .withIndex('by_org', q => q.eq('orgId', org._id))
+      .withIndex('by_org', (q) => q.eq('orgId', org._id))
       .collect();
   },
 });
 ```
+
+## CRM-Specific Considerations
+
+When building a CRM, multi-tenancy becomes especially important because:
+
+1. **Contact data is sensitive** - Personal information must be strictly isolated
+2. **Deal values are confidential** - Revenue data varies by customer
+3. **Pipeline visibility matters** - Sales processes differ per client
+4. **Task assignments** - Staff access must be properly scoped
 
 ## Best Practices
 
@@ -90,7 +101,8 @@ export const listCustomers = query({
 2. **Validate permissions** at the API level
 3. **Use indexes** for efficient tenant-based queries
 4. **Never expose tenant IDs** in URLs if possible
+5. **Scope CRM queries** by customerId for deals, contacts, and tasks
 
 ## Conclusion
 
-Multi-tenancy is essential for SaaS applications serving multiple clients. iSaaSIT provides a solid foundation with proper data isolation at every level.
+Multi-tenancy is essential for SaaS applications serving multiple clients. iSaaSIT provides a solid foundation with proper data isolation at every level, specifically designed for building CRM applications.

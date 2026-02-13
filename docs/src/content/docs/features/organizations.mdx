@@ -1,18 +1,19 @@
 ---
 title: Organizations
-description: Your agency and the foundation of your client portal
+description: Your agency and the foundation of your CRM
 ---
 
-Your Organization represents **your agency**—the foundation of your client portal platform.
+Your Organization represents **your agency**—the foundation of your CRM SaaS platform.
 
 ## Overview
 
 Each Organization:
+
 - Represents your agency or company
-- Is the owner of your client portal platform
+- Is the owner of your CRM platform
 - Manages your team (Admin and Staff roles)
-- Contains your Customers (the clients who use your portal)
-- Handles billing and subscriptions for your portal service
+- Contains your Customers (the clients who use your CRM)
+- Handles billing and subscriptions for your CRM service
 
 ## Creating an Organization
 
@@ -27,22 +28,22 @@ Organizations are created via WorkOS. When a new user signs up:
 ```typescript
 // In Convex schema
 organizations: defineTable({
-  workosOrgId: v.string(),      // Link to WorkOS org
+  workosOrgId: v.string(), // Link to WorkOS org
   name: v.string(),
   planId: v.optional(v.string()),
   subscriptionStatus: v.string(),
   maxCustomers: v.number(),
   maxStaff: v.number(),
   maxClients: v.number(),
-})
+});
 ```
 
 ## Roles within an Organization
 
-| Role | Permissions |
-|------|-------------|
+| Role      | Permissions                                   |
+| --------- | --------------------------------------------- |
 | **Admin** | Full access, billing management, user invites |
-| **Staff** | Access to assigned customers only |
+| **Staff** | Access to assigned customers only             |
 
 ## API Examples
 
@@ -54,12 +55,10 @@ export const getCurrent = query({
   handler: async (ctx) => {
     const user = await getCurrentUser(ctx);
     if (!user) return null;
-    
+
     return await ctx.db
       .query('organizations')
-      .withIndex('by_workos_org_id', q => 
-        q.eq('workosOrgId', user.orgId)
-      )
+      .withIndex('by_workos_org_id', (q) => q.eq('workosOrgId', user.orgId))
       .unique();
   },
 });

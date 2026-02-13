@@ -1,22 +1,22 @@
 # Current TODO - iSaaSIT CRM
 
-**Active Phase:** Phase 2 - Relationship Management (Frontend)
+**Active Phase:** Phase 3 - Search & Filtering (Completed)
 
 ## Immediate Next Tasks
 
-### Phase 2 Complete ✅
+### Phase 3 Complete ✅
 
-All tasks have been completed:
+All planned tasks are implemented:
 
-- ✅ Installed cmdk and created Command component
-- ✅ Updated deal detail modal with Contacts and Company linking UI
-- ✅ Added Deals tab to contact detail modal
-- ✅ Added Deals tab to company detail modal
-- ✅ Wired up cross-navigation on all pages (pipeline, contacts, companies)
+- ✅ Added backend `globalSearch` query (`convex/crm/search.ts`)
+- ✅ Added command palette UI (`src/components/crm/command-palette.tsx`)
+- ✅ Wired Cmd/Ctrl+K and global search into `MainLayout`
+- ✅ Added filter bars to contacts, companies, and deals pages
 
-### Phase 3 Ready to Start
+### Next Focus
 
-See `docs/plans/2026-02-13-phase3-search-filter-plan.md`
+- ⏳ Manual QA pass for Cmd+K search and all list filters
+- ⏳ Pick next implementation phase from `docs/plans/2026-02-13-crm-expansion-design.md`
 
 ## Reference Documents
 
@@ -26,21 +26,29 @@ See `docs/plans/2026-02-13-phase3-search-filter-plan.md`
 
 ## Status
 
-- ✅ Backend complete (convex/crm/relationships.ts)
-- 🚧 Frontend pending (6 tasks + cross-navigation wiring)
+- ✅ Phase 2 and Phase 3 code implementation complete
+- 🚧 Waiting on manual verification and next phase selection
 
 ### Hotfixes Applied
 
 - [x] Deal list rows now open the deal detail modal on `/deals`
-- ⏳ Phase 3 waiting
+- [x] Global Cmd/Ctrl+K search and list filtering UI added
+- [x] Nested modal navigation now uses stack + breadcrumb jump (no forced root exit)
+- [x] Contact and company modals updated to fixed-height two-pane layout
+- [x] Linked record click/icon now opens the linked record from all CRM pages
+- [x] Removed modal handoff flash by switching to single active modal state per page
+- [x] Added intentional shrink-then-expand handoff animation for linked record modal transitions
+- [x] Tuned modal handoff timing for a more cinematic feel
 
 ## Testing Checklist
 
-After completing Phase 2:
+After completing Phase 3:
 
-- [ ] Can link/unlink contacts to deals
-- [ ] Can link/unlink companies to deals
-- [ ] Can navigate from deal → contact → back to deal
-- [ ] Can navigate from deal → company → back to deal
-- [ ] Can view deals from contact detail modal
-- [ ] Can view deals from company detail modal
+- [x] Cmd/Ctrl+K opens command palette
+- [ ] Search returns deals, contacts, and companies
+- [ ] Selecting a search result opens the correct detail modal
+- [ ] Contacts filter bar works (search, company filter, sort)
+- [ ] Companies filter bar works (search, industry filter, sort)
+- [ ] Deals filter bar works (search, status, stage, sort)
+- [ ] Nested modal close exits to parent level first
+- [ ] Breadcrumb jump returns to selected ancestor modal level

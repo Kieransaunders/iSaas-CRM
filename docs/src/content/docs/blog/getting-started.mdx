@@ -1,20 +1,23 @@
 ---
 title: Getting Started with iSaaSIT
-description: A comprehensive guide to setting up your first client portal with iSaaSIT
+description: A comprehensive guide to setting up your CRM SaaS starter kit with iSaaSIT
 date: 2026-02-04
 authors:
   - author
 ---
 
-Welcome to iSaaSIT! This guide will walk you through everything you need to know to build and deploy your first **client portal**.
+Welcome to iSaaSIT! This guide will walk you through everything you need to know to build and deploy your first **CRM SaaS**.
 
 ## What is iSaaSIT?
 
-iSaaSIT is a **SaaS starter pack for agencies** who want to build **client portals**—secure, branded platforms where your customers can log in, access their project data, and collaborate with your team.
+iSaaSIT is a **CRM SaaS starter kit for agencies** who want to build **client CRMs**—powerful, branded relationship management platforms where your customers can manage their contacts, deals, pipelines, and tasks.
 
 It provides:
 
-- **Client portal foundation** - Ready-to-deploy portal for your customers
+- **CRM foundation** - Ready-to-deploy customer relationship management
+- **Contact management** - Store and organize leads and customers
+- **Deal pipelines** - Visual pipeline with drag-and-drop stages
+- **Task management** - Track activities and follow-ups
 - **Multi-tenant architecture** - Each client sees only their own data
 - **Built-in authentication** - Enterprise-grade auth with WorkOS AuthKit
 - **Role-based access control** - Admin (you), Staff (your team), and Client (your customers)
@@ -61,9 +64,18 @@ npm run dev
 
 iSaaSIT uses a hierarchical data model:
 
-1. **Organization** - Your agency
-2. **Customers** - Your clients
+1. **Organization** - Your agency (the CRM owner)
+2. **Customers** - Your clients (companies being managed)
 3. **Users** - People who access the system
+
+### CRM Features
+
+The starter kit includes:
+
+- **Contacts** - Individual people associated with customers
+- **Deals** - Sales opportunities linked to contacts
+- **Pipelines** - Visual deal progression through stages
+- **Tasks** - Activities and follow-ups for your team
 
 Each level has proper data isolation, ensuring clients only see their own data.
 

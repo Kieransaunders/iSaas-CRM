@@ -57,6 +57,10 @@ function InfoField({ icon: Icon, label, value }: { icon: typeof Mail; label: str
   );
 }
 
+function toTelHref(phone: string) {
+  return `tel:${phone.replace(/[^\d+]/g, '')}`;
+}
+
 export function ContactDetailModal({
   contactId,
   onClose,
@@ -159,11 +163,29 @@ export function ContactDetailModal({
                 <div className="space-y-2 rounded-md border bg-background p-4 text-sm">
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-muted-foreground">Email</span>
-                    <span className="text-right font-medium">{contact.email ?? 'Not set'}</span>
+                    {contact.email ? (
+                      <a
+                        href={`mailto:${contact.email}`}
+                        className="text-right font-medium hover:text-orange-600 hover:underline"
+                      >
+                        {contact.email}
+                      </a>
+                    ) : (
+                      <span className="text-right font-medium">Not set</span>
+                    )}
                   </div>
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-muted-foreground">Phone</span>
-                    <span className="text-right font-medium">{contact.phone ?? 'Not set'}</span>
+                    {contact.phone ? (
+                      <a
+                        href={toTelHref(contact.phone)}
+                        className="text-right font-medium hover:text-orange-600 hover:underline"
+                      >
+                        {contact.phone}
+                      </a>
+                    ) : (
+                      <span className="text-right font-medium">Not set</span>
+                    )}
                   </div>
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-muted-foreground">Company</span>
@@ -241,12 +263,20 @@ export function ContactDetailModal({
                 <DialogDescription className="flex flex-wrap items-center gap-4">
                   <span className="flex items-center gap-1">
                     <Mail className="h-3.5 w-3.5" />
-                    {contact.email ?? 'No email'}
+                    {contact.email ? (
+                      <a href={`mailto:${contact.email}`} className="hover:text-orange-600 hover:underline">
+                        {contact.email}
+                      </a>
+                    ) : (
+                      'No email'
+                    )}
                   </span>
                   {contact.phone ? (
                     <span className="flex items-center gap-1">
                       <Phone className="h-3.5 w-3.5" />
-                      {contact.phone}
+                      <a href={toTelHref(contact.phone)} className="hover:text-orange-600 hover:underline">
+                        {contact.phone}
+                      </a>
                     </span>
                   ) : null}
                   {companyName && contact.companyId ? (

@@ -1,15 +1,16 @@
 ---
 title: Customer Management
-description: Managing your client companies in your client portal
+description: Managing your client companies in your CRM
 ---
 
-Customers represent the **client companies** that access your **client portal**. Each customer gets their own secure, isolated space within your platform.
+Customers represent the **client companies** that access your **CRM**. Each customer gets their own secure, isolated space within your platform.
 
 ## What is a Customer?
 
-A Customer is a client company that uses your client portal. Each Customer:
+A Customer is a client company that uses your CRM. Each Customer:
+
 - Gets their own isolated data space (other clients can't see their data)
-- Can have multiple users (employees) who log into your portal
+- Can have multiple users (employees) who log into your CRM
 - Is managed by your Staff members
 - Belongs to your Organization (agency)
 
@@ -19,7 +20,7 @@ A Customer is a client company that uses your client portal. Each Customer:
 customers: defineTable({
   orgId: v.id('organizations'),
   name: v.string(),
-  slug: v.string(),        // Unique within org
+  slug: v.string(), // Unique within org
   settings: v.object({
     // Customer-specific settings
   }),
@@ -39,17 +40,17 @@ export const create = mutation({
   },
   handler: async (ctx, args) => {
     const org = await getCurrentOrg(ctx);
-    
+
     // Check customer limit
     const existingCount = await ctx.db
       .query('customers')
-      .withIndex('by_org', q => q.eq('orgId', org._id))
+      .withIndex('by_org', (q) => q.eq('orgId', org._id))
       .collect();
-      
+
     if (existingCount.length >= org.maxCustomers) {
       throw new Error('Customer limit reached');
     }
-    
+
     return await ctx.db.insert('customers', {
       orgId: org._id,
       name: args.name,
@@ -75,9 +76,10 @@ staffCustomerAssignments: defineTable({
   .index('by_customer', ['customerId']);
 ```
 
-## Customer Portal
+## Customer CRM Access
 
-Customers have a self-service portal where they can:
+Customers have a self-service area where they can:
+
 - View their data
 - Manage their users
 - Update their settings

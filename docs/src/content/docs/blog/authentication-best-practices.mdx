@@ -1,16 +1,16 @@
 ---
-title: Authentication Best Practices
-description: Learn how to implement secure authentication with WorkOS AuthKit
+title: Authentication Best Practices for CRM SaaS
+description: Learn how to implement secure authentication with WorkOS AuthKit in your CRM
 date: 2026-02-02
 authors:
   - author
 ---
 
-# Authentication Best Practices
+# Authentication Best Practices for CRM SaaS
 
 **Published:** February 2, 2026
 
-Authentication is critical for any SaaS application. Here's how iSaaSIT handles it securely.
+Authentication is critical for any SaaS application, especially CRMs that handle sensitive customer data. Here's how iSaaSIT handles it securely.
 
 ## Why WorkOS AuthKit?
 
@@ -50,8 +50,8 @@ export const Route = createFileRoute('/_authenticated')({
   loader: async ({ location }) => {
     const { user } = await getAuth();
     if (!user) {
-      const href = await getSignInUrl({ 
-        data: { returnPathname: location.pathname } 
+      const href = await getSignInUrl({
+        data: { returnPathname: location.pathname },
       });
       throw redirect({ href });
     }
@@ -86,9 +86,7 @@ Always verify authentication on the server, not just client-side.
 ```tsx
 const { signOut } = useAuth();
 
-<button onClick={() => signOut()}>
-  Sign Out
-</button>
+<button onClick={() => signOut()}>Sign Out</button>;
 ```
 
 ## Common Pitfalls

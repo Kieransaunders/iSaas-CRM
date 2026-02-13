@@ -4,12 +4,12 @@
 
 ## Current Status Overview
 
-| Phase                            | Status         | Completion |
-| -------------------------------- | -------------- | ---------- |
-| Phase 1: Core CRM Entities       | ✅ Complete    | 100%       |
-| Phase 2: Relationship Management | 🚧 Partial     | 70%        |
-| Phase 3: Search & Filtering      | ⏳ Not Started | 0%         |
-| Phase 4: Activity System         | ✅ Complete    | 100%       |
+| Phase                            | Status      | Completion |
+| -------------------------------- | ----------- | ---------- |
+| Phase 1: Core CRM Entities       | ✅ Complete | 100%       |
+| Phase 2: Relationship Management | ✅ Complete | 100%       |
+| Phase 3: Search & Filtering      | ✅ Complete | 100%       |
+| Phase 4: Activity System         | ✅ Complete | 100%       |
 
 ---
 
@@ -63,37 +63,46 @@
 - [x] Task 9: Add Deals tab to company detail modal
 - [x] Task 10: Wire up modal callbacks on pipeline page
 - [x] Task 11: Wire up modal callbacks on contacts/companies pages
+- [x] UX pass: modal stack navigation with breadcrumb jump between nested modals
+- [x] UX pass: fixed-height two-pane detail modal layout for contact/company
+- [x] Fix: linked record navigation works from text and icon on deals/contacts/companies pages
+- [x] Fix: removed close/open flash when jumping between linked records
+- [x] UX: intentional shrink-then-expand modal handoff transition for cross-record navigation
+- [x] UX polish: cinematic modal handoff timing adjustment
 
-**Pending Files:**
+**Frontend Files Completed:**
 
-- `src/components/ui/command.tsx` (needs creation)
-- Updates to `src/components/crm/deal-detail-modal.tsx`
-- Updates to `src/components/crm/contact-detail-modal.tsx`
-- Updates to `src/components/crm/company-detail-modal.tsx`
-- Updates to `src/routes/_authenticated/pipeline.tsx`
-- Updates to `src/routes/_authenticated/contacts.tsx`
-- Updates to `src/routes/_authenticated/companies.tsx`
+- `src/components/ui/command.tsx`
+- `src/components/crm/deal-detail-modal.tsx`
+- `src/components/crm/contact-detail-modal.tsx`
+- `src/components/crm/company-detail-modal.tsx`
+- `src/routes/_authenticated/pipeline.tsx`
+- `src/routes/_authenticated/contacts.tsx`
+- `src/routes/_authenticated/companies.tsx`
+- `src/components/layout/main-layout.tsx` (stack-based nested modal navigation)
 
 ---
 
-### Phase 3: Search & Filtering ⏳
+### Phase 3: Search & Filtering ✅
 
 #### Tasks
 
-- [ ] Task 1: Backend `globalSearch` query
-- [ ] Task 2: Install shadcn Command component
-- [ ] Task 3: Create `CommandPalette` component
-- [ ] Task 4: Wire CommandPalette into MainLayout with Cmd-K shortcut
-- [ ] Task 5: Add filter bar to contacts list
-- [ ] Task 6: Add filter bar to companies list
-- [ ] Task 7: Add filter bar to deals list
+- [x] Task 1: Backend `globalSearch` query
+- [x] Task 2: Install shadcn Command component
+- [x] Task 3: Create `CommandPalette` component
+- [x] Task 4: Wire CommandPalette into MainLayout with Cmd-K shortcut
+- [x] Task 5: Add filter bar to contacts list
+- [x] Task 6: Add filter bar to companies list
+- [x] Task 7: Add filter bar to deals list
 
-**Pending Files:**
+**Files Completed:**
 
 - `convex/crm/search.ts`
 - `src/components/crm/command-palette.tsx`
-- Updates to `src/components/layout/main-layout.tsx`
-- Updates to list pages
+- `src/components/layout/main-layout.tsx`
+- `src/routes/_authenticated/contacts.tsx`
+- `src/routes/_authenticated/companies.tsx`
+- `src/routes/_authenticated/deals.tsx`
 
 ---
 
@@ -130,9 +139,9 @@ Project documentation is in the `docs/` directory:
 
 ## Next Steps
 
-1. **Complete Phase 2 Frontend**: Implement the relationship linking UI in detail modals
-2. **Test Cross-Navigation**: Ensure modals can open other modals seamlessly
-3. **Start Phase 3**: Implement global search and filtering
+1. **Manual QA**: Validate Phase 2 cross-navigation and Phase 3 search/filter behavior end-to-end
+2. **Select Next Scope**: Choose next phase from CRM expansion design plan
+3. **Implement Next Phase**: Begin next planned feature set
 
 ## Notes
 
