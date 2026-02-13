@@ -10,6 +10,7 @@
 | Phase 2: Relationship Management | ✅ Complete | 100%       |
 | Phase 3: Search & Filtering      | ✅ Complete | 100%       |
 | Phase 4: Activity System         | ✅ Complete | 100%       |
+| Phase 5: Team & Impersonation    | ✅ Complete | 100%     |
 
 ---
 
@@ -117,6 +118,45 @@
 
 - `convex/crm/activities.ts`
 - `src/components/crm/activity-timeline.tsx`
+
+---
+
+### Phase 5: Team Management & Impersonation 🚧
+
+#### Backend Tasks (Complete ✅)
+
+- [x] Task 1: Update `listOrgMembers` for all members + avatar data
+- [x] Task 2: Add `updateUserRole` mutation
+- [x] Task 3: Add `removeOrgMember` action (WorkOS membership removal)
+- [x] Task 4: Allow admin role in invitation flow
+- [x] Task 5: Verify existing `listPendingInvitations` + `revokeInvitation`
+- [x] Task 6: Add `ownerFilter` arg to CRM list queries
+
+**Backend Files Completed:**
+
+- `convex/users/queries.ts`
+- `convex/users/manage.ts`
+- `convex/users/manageActions.ts`
+- `convex/users/sync.ts`
+- `convex/users/syncActions.ts`
+- `convex/invitations/send.ts`
+- `convex/invitations/internal.ts`
+- `convex/crm/contacts.ts`
+- `convex/crm/companies.ts`
+- `convex/crm/deals.ts`
+- `convex/schema.ts`
+- `convex/webhooks/workosShared.ts`
+
+#### UI Tasks (Complete ✅)
+
+- [x] Task 7: Members section in settings (table with role dropdown, remove button)
+- [x] Task 8: Invite member dialog (email + role fields)
+- [x] Task 9: Pending invitations list with revoke capability
+- [x] Task 10: "All" / "Mine" toggle on contacts, companies, deals, pipeline lists
+- [x] Task 11: Owner dropdown in deal, contact, company detail modals
+- [x] Task 12: Owner avatar on pipeline deal cards
+- [x] Task 13: Impersonation detection and banner (WorkOS AuthKit `act` claim)
+- [x] Task 14: Block restricted actions during impersonation
 
 ---
 

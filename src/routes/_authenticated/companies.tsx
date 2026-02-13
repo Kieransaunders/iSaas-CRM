@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { CompanyDetailModal } from '@/components/crm/company-detail-modal';
 import { ContactDetailModal } from '@/components/crm/contact-detail-modal';
 import { DealDetailModal } from '@/components/crm/deal-detail-modal';
@@ -31,7 +32,8 @@ type ActiveModal =
   | null;
 
 function CompaniesPage() {
-  const companies = useQuery(api.crm.companies.listCompanies);
+  const [ownerFilter, setOwnerFilter] = useState<'all' | 'mine'>('mine');
+  const companies = useQuery(api.crm.companies.listCompanies, { ownerFilter });
   const defaultPipeline = useQuery(api.crm.pipelines.getDefaultPipeline);
   const stages = useQuery(
     api.crm.pipelines.listStagesByPipeline,
@@ -108,6 +110,7 @@ function CompaniesPage() {
     setSearchQuery('');
     setIndustryFilter('all');
     setSortBy('created-desc');
+    setOwnerFilter('mine');
   };
 
   const selectedDealId = activeModal?.type === 'deal' ? activeModal.id : null;
@@ -153,7 +156,7 @@ function CompaniesPage() {
         <CardHeader>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <CardTitle>All companies</CardTitle>
+              <CardTitle>{ownerFilter === 'mine' ? 'My companies' : 'All companies'}</CardTitle>
               <CardDescription>
                 {filteredCompanies.length}
                 {hasActiveFilters ? ` of ${companies?.length ?? 0}` : ''} companies
@@ -167,7 +170,20 @@ function CompaniesPage() {
             )}
           </div>
           {/* Filter bar */}
-          <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center">
+          <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:flex-wrap sm:items-center">
+            <ToggleGroup
+              type="single"
+              value={ownerFilter}
+              onValueChange={(v) => { if (v) setOwnerFilter(v as 'all' | 'mine'); }}
+              className="shrink-0"
+            >
+              <ToggleGroupItem value="mine" aria-label="My companies" className="text-xs px-3">
+                Mine
+              </ToggleGroupItem>
+              <ToggleGroupItem value="all" aria-label="All companies" className="text-xs px-3">
+                All
+              </ToggleGroupItem>
+            </ToggleGroup>
             <div className="relative flex-1 sm:max-w-xs">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input

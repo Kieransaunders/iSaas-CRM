@@ -1,14 +1,16 @@
-import { ConvexError } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { query } from "../_generated/server";
 
 /**
- * List all members of the current user's organization
- * Admin-only query that includes both active and removed users
+ * List all active members of the current user's organization.
+ * Available to all authenticated org members (needed for owner dropdowns).
+ * Admins additionally see removed (soft-deleted) users.
  */
 export const listOrgMembers = query({
-  args: {},
-  handler: async (ctx) => {
-    // Get authenticated user
+  args: {
+    includeRemoved: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
       throw new ConvexError("Not authenticated");
@@ -16,7 +18,6 @@ export const listOrgMembers = query({
 
     const workosUserId = identity.subject;
 
-    // Get current user record
     const currentUser = await ctx.db
       .query("users")
       .withIndex("by_workos_user_id", (q) => q.eq("workosUserId", workosUserId))
@@ -26,36 +27,41 @@ export const listOrgMembers = query({
       throw new ConvexError("User not in organization");
     }
 
-    // Only admin can list all members
-    if (currentUser.role !== "admin") {
-      throw new ConvexError("Permission denied");
-    }
+    const isAdmin = currentUser.role === "admin";
+    const showRemoved = !!args.includeRemoved && isAdmin;
 
-    // Get all users in the organization
     const users = await ctx.db
       .query("users")
       .withIndex("by_org", (q) => q.eq("orgId", currentUser.orgId))
       .collect();
 
-    // Enrich with status and displayName, sort by status
-    const enrichedUsers = users.map((user) => {
-      const status = user.deletedAt ? "removed" : "active";
-      const displayName = user.firstName && user.lastName
-        ? `${user.firstName} ${user.lastName}`
-        : user.email;
+    const enrichedUsers = users
+      .filter((user) => showRemoved || !user.deletedAt)
+      .map((user) => {
+        const status = user.deletedAt ? "removed" : "active";
+        const displayName = user.firstName && user.lastName
+          ? `${user.firstName} ${user.lastName}`
+          : user.firstName || user.email;
 
-      return {
-        ...user,
-        status,
-        displayName,
-      };
-    });
+        return {
+          _id: user._id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          profilePictureUrl: user.profilePictureUrl,
+          role: user.role,
+          status,
+          displayName,
+          createdAt: user.createdAt,
+          deletedAt: user.deletedAt,
+          isCurrentUser: user._id === currentUser._id,
+        };
+      });
 
-    // Sort: active users first, then removed users
     enrichedUsers.sort((a, b) => {
       if (a.status === "active" && b.status === "removed") return -1;
       if (a.status === "removed" && b.status === "active") return 1;
-      return 0;
+      return a.displayName.localeCompare(b.displayName);
     });
 
     return enrichedUsers;
@@ -69,7 +75,6 @@ export const listOrgMembers = query({
 export const getOrgMemberCounts = query({
   args: {},
   handler: async (ctx) => {
-    // Get authenticated user
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
       throw new ConvexError("Not authenticated");
@@ -77,7 +82,6 @@ export const getOrgMemberCounts = query({
 
     const workosUserId = identity.subject;
 
-    // Get current user record
     const currentUser = await ctx.db
       .query("users")
       .withIndex("by_workos_user_id", (q) => q.eq("workosUserId", workosUserId))
@@ -94,7 +98,6 @@ export const getOrgMemberCounts = query({
 
     const orgId = currentUser.orgId;
 
-    // Get all active users (exclude deleted)
     const users = await ctx.db
       .query("users")
       .withIndex("by_org", (q) => q.eq("orgId", orgId))
@@ -104,7 +107,6 @@ export const getOrgMemberCounts = query({
     const staffCount = activeUsers.filter((u) => u.role === "staff").length;
     const clientCount = activeUsers.filter((u) => u.role === "client").length;
 
-    // Count pending invitations
     const pendingInvitations = await ctx.db
       .query("pendingInvitations")
       .withIndex("by_org", (q) => q.eq("orgId", orgId))

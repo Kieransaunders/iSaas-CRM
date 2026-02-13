@@ -3,9 +3,21 @@ import { mutation, query } from '../_generated/server';
 import { assertCanWrite, ensureSameOrgEntity, requireCrmUser } from './authz';
 
 export const listContacts = query({
-  args: {},
-  handler: async (ctx) => {
-    const { orgId } = await requireCrmUser(ctx);
+  args: {
+    ownerFilter: v.optional(v.union(v.literal('all'), v.literal('mine'))),
+  },
+  handler: async (ctx, args) => {
+    const { orgId, userRecord } = await requireCrmUser(ctx);
+
+    if (args.ownerFilter === 'mine') {
+      return await ctx.db
+        .query('contacts')
+        .withIndex('by_org_owner', (q) =>
+          q.eq('orgId', orgId).eq('ownerUserId', userRecord._id)
+        )
+        .collect();
+    }
+
     return await ctx.db
       .query('contacts')
       .withIndex('by_org', (q) => q.eq('orgId', orgId))
@@ -60,6 +72,7 @@ export const updateContact = mutation({
     phone: v.optional(v.string()),
     title: v.optional(v.string()),
     companyId: v.optional(v.id('companies')),
+    ownerUserId: v.optional(v.id('users')),
   },
   handler: async (ctx, args) => {
     const { orgId, role } = await requireCrmUser(ctx);
@@ -74,6 +87,11 @@ export const updateContact = mutation({
     const patch: Record<string, unknown> = { updatedAt: Date.now() };
     for (const [key, value] of Object.entries(fields)) {
       if (value !== undefined) patch[key] = value;
+    }
+
+    // Handle unassign (empty string becomes undefined)
+    if (args.ownerUserId === '') {
+      patch.ownerUserId = undefined;
     }
 
     await ctx.db.patch(contactId, patch);

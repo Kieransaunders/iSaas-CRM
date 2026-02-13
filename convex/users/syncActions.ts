@@ -153,7 +153,7 @@ export const syncCurrentUserFromWorkOS = action({
         _id: Id<"pendingInvitations">;
         workosInvitationId: string;
         orgId: Id<"orgs">;
-        role: "staff" | "client";
+        role: "admin" | "staff" | "client";
         customerId?: Id<"customers">;
         createdAt: number;
         expiresAt: number;

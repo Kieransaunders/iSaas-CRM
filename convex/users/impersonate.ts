@@ -90,3 +90,47 @@ export const getImpersonationStatus = query({
         return targetUser;
     },
 });
+
+/**
+ * Detect WorkOS AuthKit impersonation via the `act` claim on the JWT.
+ * Returns impersonation info if the current session is an impersonated session.
+ *
+ * WorkOS AuthKit sets `act.sub` to the impersonator's user ID when
+ * a platform admin impersonates a user from the WorkOS Dashboard.
+ */
+export const getWorkosImpersonationStatus = query({
+    args: {},
+    handler: async (ctx) => {
+        const identity = await ctx.auth.getUserIdentity();
+        if (!identity) return null;
+
+        // WorkOS AuthKit impersonation: check for `act` claim
+        // The identity object from Convex may expose custom claims
+        // Check if the token has an `act` (actor) claim indicating impersonation
+        const tokenData = identity as Record<string, unknown>;
+        const actClaim = tokenData.act as { sub?: string } | undefined;
+
+        if (!actClaim?.sub) {
+            return null;
+        }
+
+        // Get the impersonated user's info
+        const impersonatedUser = await ctx.db
+            .query("users")
+            .withIndex("by_workos_user_id", (q) => q.eq("workosUserId", identity.subject))
+            .unique();
+
+        if (!impersonatedUser) return null;
+
+        return {
+            isWorkosImpersonation: true,
+            impersonatedUser: {
+                firstName: impersonatedUser.firstName,
+                lastName: impersonatedUser.lastName,
+                email: impersonatedUser.email,
+                role: impersonatedUser.role,
+            },
+            impersonatorId: actClaim.sub,
+        };
+    },
+});

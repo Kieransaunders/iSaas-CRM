@@ -2,6 +2,8 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical } from 'lucide-react';
 import type { Id } from '../../../convex/_generated/dataModel';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { getStageColors } from '@/lib/stage-colors';
 import { cn } from '@/lib/utils';
 
@@ -12,6 +14,8 @@ export type DealCardData = {
   contactName: string | null;
   stageId: Id<'pipelineStages'>;
   status: 'open' | 'won' | 'lost';
+  ownerName?: string;
+  ownerAvatarUrl?: string;
 };
 
 type DealCardProps = {
@@ -55,7 +59,24 @@ export function DealCard({ deal, stageName, onClick }: DealCardProps) {
         <p className={cn('mt-0.5 text-sm font-semibold', colors.text)}>
           {deal.value ? `$${deal.value.toLocaleString()}` : '—'}
         </p>
-        <p className="mt-1 truncate text-xs text-muted-foreground">{deal.contactName ?? 'No contact'}</p>
+        <div className="mt-1 flex items-center justify-between">
+          <p className="truncate text-xs text-muted-foreground">{deal.contactName ?? 'No contact'}</p>
+          {deal.ownerName && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Avatar className="h-5 w-5">
+                  <AvatarImage src={deal.ownerAvatarUrl} />
+                  <AvatarFallback className="text-[9px]">
+                    {deal.ownerName.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)}
+                  </AvatarFallback>
+                </Avatar>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="text-xs">
+                {deal.ownerName}
+              </TooltipContent>
+            </Tooltip>
+          )}
+        </div>
       </div>
     </div>
   );

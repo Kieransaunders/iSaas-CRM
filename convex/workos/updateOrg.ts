@@ -35,6 +35,14 @@ export const updateOrganization = action({
       throw new ConvexError("User not in organization");
     }
 
+    // Block organization updates during impersonation
+    const isImpersonating = await ctx.runQuery(internal.users.internal.isImpersonatedSession, {
+      workosUserId,
+    });
+    if (isImpersonating) {
+      throw new ConvexError("Organization updates are not allowed during impersonation sessions");
+    }
+
     // Get user's org from Convex
     const userOrg = await ctx.runQuery(internal.orgs.get.getMyOrgInternal, {
       workosUserId,

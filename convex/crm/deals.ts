@@ -3,9 +3,21 @@ import { mutation, query } from '../_generated/server';
 import { assertCanWrite, ensureSameOrgEntity, requireCrmUser } from './authz';
 
 export const listDeals = query({
-  args: {},
-  handler: async (ctx) => {
-    const { orgId } = await requireCrmUser(ctx);
+  args: {
+    ownerFilter: v.optional(v.union(v.literal('all'), v.literal('mine'))),
+  },
+  handler: async (ctx, args) => {
+    const { orgId, userRecord } = await requireCrmUser(ctx);
+
+    if (args.ownerFilter === 'mine') {
+      return await ctx.db
+        .query('deals')
+        .withIndex('by_org_owner', (q) =>
+          q.eq('orgId', orgId).eq('ownerUserId', userRecord._id)
+        )
+        .collect();
+    }
+
     return await ctx.db
       .query('deals')
       .withIndex('by_org', (q) => q.eq('orgId', orgId))
@@ -16,16 +28,23 @@ export const listDeals = query({
 export const listDealsByPipeline = query({
   args: {
     pipelineId: v.id('pipelines'),
+    ownerFilter: v.optional(v.union(v.literal('all'), v.literal('mine'))),
   },
   handler: async (ctx, args) => {
-    const { orgId } = await requireCrmUser(ctx);
+    const { orgId, userRecord } = await requireCrmUser(ctx);
     const pipeline = await ctx.db.get('pipelines', args.pipelineId);
     ensureSameOrgEntity(orgId, pipeline, 'Pipeline not found');
 
-    return await ctx.db
+    const allDeals = await ctx.db
       .query('deals')
       .withIndex('by_pipeline', (q) => q.eq('pipelineId', args.pipelineId))
       .collect();
+
+    if (args.ownerFilter === 'mine') {
+      return allDeals.filter((d) => d.ownerUserId === userRecord._id);
+    }
+
+    return allDeals;
   },
 });
 
@@ -105,6 +124,7 @@ export const updateDeal = mutation({
     expectedCloseDate: v.optional(v.number()),
     notes: v.optional(v.string()),
     assigneeUserId: v.optional(v.id('users')),
+    ownerUserId: v.optional(v.id('users')),
   },
   handler: async (ctx, args) => {
     const { orgId, role } = await requireCrmUser(ctx);
@@ -123,6 +143,7 @@ export const updateDeal = mutation({
     if (args.expectedCloseDate !== undefined) patch.expectedCloseDate = args.expectedCloseDate;
     if (args.notes !== undefined) patch.notes = args.notes;
     if (args.assigneeUserId !== undefined) patch.assigneeUserId = args.assigneeUserId;
+    if (args.ownerUserId !== undefined) patch.ownerUserId = args.ownerUserId;
 
     await ctx.db.patch('deals', args.dealId, patch);
     return args.dealId;

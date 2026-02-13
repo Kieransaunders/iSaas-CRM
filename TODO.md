@@ -1,54 +1,70 @@
 # Current TODO - iSaaSIT CRM
 
-**Active Phase:** Phase 3 - Search & Filtering (Completed)
+**Active Phase:** Phase 5 - Team Management & Impersonation (Complete ✅)
 
-## Immediate Next Tasks
+## Summary
 
-### Phase 3 Complete ✅
+All Phase 5 tasks have been implemented:
 
-All planned tasks are implemented:
+### Backend Tasks (Complete ✅)
 
-- ✅ Added backend `globalSearch` query (`convex/crm/search.ts`)
-- ✅ Added command palette UI (`src/components/crm/command-palette.tsx`)
-- ✅ Wired Cmd/Ctrl+K and global search into `MainLayout`
-- ✅ Added filter bars to contacts, companies, and deals pages
+- ✅ Task 1: Updated `listOrgMembers` for all members + avatar data
+- ✅ Task 2: Added `updateUserRole` mutation
+- ✅ Task 3: Added `removeOrgMember` action (WorkOS membership removal)
+- ✅ Task 4: Allowed admin role in invitation flow
+- ✅ Task 5: Verified existing `listPendingInvitations` + `revokeInvitation`
+- ✅ Task 6: Added `ownerFilter` arg to CRM list queries
+- ✅ Task 14: Block restricted actions during impersonation
 
-### Next Focus
+### UI Tasks (Complete ✅)
 
-- ⏳ Manual QA pass for Cmd+K search and all list filters
-- ⏳ Pick next implementation phase from `docs/plans/2026-02-13-crm-expansion-design.md`
+- ✅ Task 7: Members section in settings (table with role dropdown, remove button)
+- ✅ Task 8: Invite member dialog (email + role fields)
+- ✅ Task 9: Pending invitations list with revoke capability
+- ✅ Task 10: "All" / "Mine" toggle on contacts, companies, deals, pipeline lists
+- ✅ Task 11: Owner dropdown in deal, contact, company detail modals
+- ✅ Task 12: Owner avatar on pipeline deal cards
+- ✅ Task 13: Impersonation detection and banner (WorkOS AuthKit `act` claim)
 
-## Reference Documents
+## Files Modified
 
-- **Full Plan:** `docs/plans/2026-02-13-phase2-relationships-plan.md`
-- **Progress Tracker:** `PROGRESS.md`
-- **Architecture:** `docs/plans/2026-02-13-crm-expansion-design.md`
+### Backend
+- `convex/users/queries.ts`
+- `convex/users/manage.ts`
+- `convex/users/manageActions.ts`
+- `convex/users/internal.ts`
+- `convex/users/impersonate.ts`
+- `convex/users/sync.ts`
+- `convex/users/syncActions.ts`
+- `convex/invitations/send.ts`
+- `convex/invitations/internal.ts`
+- `convex/crm/contacts.ts`
+- `convex/crm/companies.ts`
+- `convex/crm/deals.ts`
+- `convex/crm/pipelines.ts`
+- `convex/crm/authz.ts`
+- `convex/workos/updateOrg.ts`
+- `convex/schema.ts`
+- `convex/webhooks/workosShared.ts`
 
-## Status
+### Frontend
+- `src/routes/_authenticated/settings.tsx`
+- `src/routes/_authenticated/contacts.tsx`
+- `src/routes/_authenticated/companies.tsx`
+- `src/routes/_authenticated/deals.tsx`
+- `src/routes/_authenticated/pipeline.tsx`
+- `src/routes/_authenticated/dashboard.tsx`
+- `src/components/crm/deal-detail-modal.tsx`
+- `src/components/crm/contact-detail-modal.tsx`
+- `src/components/crm/company-detail-modal.tsx`
+- `src/components/crm/deal-card.tsx`
+- `src/components/layout/impersonation-banner.tsx`
+- `src/components/ui/toggle.tsx` (new)
+- `src/components/ui/toggle-group.tsx` (new)
 
-- ✅ Phase 2 and Phase 3 code implementation complete
-- 🚧 Waiting on manual verification and next phase selection
+## Next Steps
 
-### Hotfixes Applied
-
-- [x] Deal list rows now open the deal detail modal on `/deals`
-- [x] Global Cmd/Ctrl+K search and list filtering UI added
-- [x] Nested modal navigation now uses stack + breadcrumb jump (no forced root exit)
-- [x] Contact and company modals updated to fixed-height two-pane layout
-- [x] Linked record click/icon now opens the linked record from all CRM pages
-- [x] Removed modal handoff flash by switching to single active modal state per page
-- [x] Added intentional shrink-then-expand handoff animation for linked record modal transitions
-- [x] Tuned modal handoff timing for a more cinematic feel
-
-## Testing Checklist
-
-After completing Phase 3:
-
-- [x] Cmd/Ctrl+K opens command palette
-- [ ] Search returns deals, contacts, and companies
-- [ ] Selecting a search result opens the correct detail modal
-- [ ] Contacts filter bar works (search, company filter, sort)
-- [ ] Companies filter bar works (search, industry filter, sort)
-- [ ] Deals filter bar works (search, status, stage, sort)
-- [ ] Nested modal close exits to parent level first
-- [ ] Breadcrumb jump returns to selected ancestor modal level
+- Manual QA pass for team management features
+- Test invitation flow end-to-end
+- Verify ownership filtering works correctly
+- Test impersonation detection and blocking

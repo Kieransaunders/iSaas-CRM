@@ -14,6 +14,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -45,13 +46,33 @@ const getPathLabel = (type: 'deal' | 'contact' | 'company') => {
   return 'Company';
 };
 
-function InfoField({ icon: Icon, label, value }: { icon: typeof Mail; label: string; value?: string }) {
+function InfoField({
+  icon: Icon,
+  label,
+  value,
+  href,
+}: {
+  icon: typeof Mail;
+  label: string;
+  value?: string;
+  href?: string;
+}) {
   return (
     <div className="space-y-1">
       <Label className="text-xs text-muted-foreground">{label}</Label>
       <div className="flex items-center gap-2 text-sm">
         <Icon className="h-3.5 w-3.5 text-muted-foreground" />
-        <span>{value || '—'}</span>
+        {value ? (
+          href ? (
+            <a href={href} className="hover:text-orange-600 hover:underline">
+              {value}
+            </a>
+          ) : (
+            <span>{value}</span>
+          )
+        ) : (
+          <span>—</span>
+        )}
       </div>
     </div>
   );
@@ -71,8 +92,9 @@ export function ContactDetailModal({
 }: ContactDetailModalProps) {
   const contact = useQuery(api.crm.contacts.getContact, contactId ? { contactId } : 'skip');
   const activities = useQuery(api.crm.activities.listContactActivities, contactId ? { contactId } : 'skip');
-  const companies = useQuery(api.crm.companies.listCompanies);
+  const companies = useQuery(api.crm.companies.listCompanies, { ownerFilter: 'all' });
   const contactDeals = useQuery(api.crm.relationships.listContactDeals, contactId ? { contactId } : 'skip');
+  const orgMembers = useQuery(api.users.queries.listOrgMembers, {});
 
   const updateContact = useMutation(api.crm.contacts.updateContact);
   const deleteContact = useMutation(api.crm.contacts.deleteContact);
@@ -403,13 +425,62 @@ export function ContactDetailModal({
                         <InfoField icon={User} label="Last Name" value={contact.lastName} />
                       </div>
                       <div className="grid gap-4 sm:grid-cols-2">
-                        <InfoField icon={Mail} label="Email" value={contact.email} />
-                        <InfoField icon={Phone} label="Phone" value={contact.phone} />
+                        <InfoField
+                          icon={Mail}
+                          label="Email"
+                          value={contact.email}
+                          href={contact.email ? `mailto:${contact.email}` : undefined}
+                        />
+                        <InfoField
+                          icon={Phone}
+                          label="Phone"
+                          value={contact.phone}
+                          href={contact.phone ? toTelHref(contact.phone) : undefined}
+                        />
                       </div>
                       <div className="grid gap-4 sm:grid-cols-2">
                         <InfoField icon={User} label="Title" value={contact.title} />
                         <InfoField icon={Building2} label="Company" value={companyName} />
                       </div>
+
+                      {/* Owner Assignment */}
+                      <div className="space-y-2">
+                        <Label>Owner</Label>
+                        <Select
+                          value={contact.ownerUserId ?? 'unassigned'}
+                          onValueChange={async (value) => {
+                            try {
+                              await updateContact({
+                                contactId,
+                                ownerUserId: value === 'unassigned' ? undefined : value as Id<'users'>,
+                              });
+                            } catch (err) {
+                              // Error handled by mutation
+                            }
+                          }}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Unassigned" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="unassigned">Unassigned</SelectItem>
+                            {orgMembers?.map((member) => (
+                              <SelectItem key={member._id} value={member._id}>
+                                <div className="flex items-center gap-2">
+                                  <Avatar className="h-5 w-5">
+                                    <AvatarImage src={member.profilePictureUrl ?? undefined} />
+                                    <AvatarFallback className="text-[10px]">
+                                      {member.displayName[0]}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  {member.displayName}
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
                       <Button variant="outline" onClick={handleStartEdit}>
                         Edit
                       </Button>

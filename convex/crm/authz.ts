@@ -53,3 +53,37 @@ export function ensureSameOrgEntity<T extends { orgId: Id<'orgs'> } | null>(
   }
   return entity;
 }
+
+/**
+ * Check if the current session is impersonated (either local or WorkOS AuthKit).
+ * Returns true if the `act` claim is present on the JWT identity,
+ * OR if the user has `impersonatingUserId` set.
+ */
+export async function isImpersonatedSession(ctx: Ctx): Promise<boolean> {
+  const identity = await ctx.auth.getUserIdentity();
+  if (!identity) return false;
+
+  // Check WorkOS AuthKit impersonation
+  const tokenData = identity as Record<string, unknown>;
+  const actClaim = tokenData.act as { sub?: string } | undefined;
+  if (actClaim?.sub) return true;
+
+  // Check local impersonation
+  const user = await ctx.db
+    .query('users')
+    .withIndex('by_workos_user_id', (q) => q.eq('workosUserId', identity.subject))
+    .first();
+
+  return !!user?.impersonatingUserId;
+}
+
+/**
+ * Throw if the current session is impersonated.
+ * Use this to guard sensitive operations like billing, org deletion, role changes.
+ */
+export async function blockDuringImpersonation(ctx: Ctx): Promise<void> {
+  const impersonated = await isImpersonatedSession(ctx);
+  if (impersonated) {
+    throw new ConvexError('This action is not allowed during an impersonation session');
+  }
+}

@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useMutation, useQuery } from 'convex/react';
 import { Loader2, Plus } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { api } from '../../../convex/_generated/api';
 import type { Id } from '../../../convex/_generated/dataModel';
 import { ContactDetailModal } from '@/components/crm/contact-detail-modal';
@@ -10,6 +10,7 @@ import { DealDetailModal } from '@/components/crm/deal-detail-modal';
 import { PipelineBoard } from '@/components/crm/pipeline-board';
 import { useModalTransition } from '@/hooks/use-modal-transition';
 import { Button } from '@/components/ui/button';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
 export const Route = createFileRoute('/_authenticated/pipeline')({
   component: PipelinePage,
@@ -22,11 +23,12 @@ type ActiveModal =
   | null;
 
 function PipelinePage() {
+  const [ownerFilter, setOwnerFilter] = useState<'all' | 'mine'>('mine');
   const ensureDefaultPipeline = useMutation(api.crm.pipelines.ensureDefaultPipeline);
   const defaultPipeline = useQuery(api.crm.pipelines.getDefaultPipeline);
   const board = useQuery(
     api.crm.pipelines.getPipelineBoard,
-    defaultPipeline ? { pipelineId: defaultPipeline._id } : 'skip',
+    defaultPipeline ? { pipelineId: defaultPipeline._id, ownerFilter } : 'skip',
   );
   const stages = useQuery(
     api.crm.pipelines.listStagesByPipeline,
@@ -65,12 +67,26 @@ function PipelinePage() {
             stages
           </p>
         </div>
-        <Button className="bg-orange-500 text-white hover:bg-orange-600" asChild>
-          <a href="/deals">
-            <Plus className="mr-1 h-4 w-4" />
-            Add Deal
-          </a>
-        </Button>
+        <div className="flex items-center gap-3">
+          <ToggleGroup
+            type="single"
+            value={ownerFilter}
+            onValueChange={(v) => { if (v) setOwnerFilter(v as 'all' | 'mine'); }}
+          >
+            <ToggleGroupItem value="mine" aria-label="My deals" className="text-xs px-3">
+              Mine
+            </ToggleGroupItem>
+            <ToggleGroupItem value="all" aria-label="All deals" className="text-xs px-3">
+              All
+            </ToggleGroupItem>
+          </ToggleGroup>
+          <Button className="bg-orange-500 text-white hover:bg-orange-600" asChild>
+            <a href="/deals">
+              <Plus className="mr-1 h-4 w-4" />
+              Add Deal
+            </a>
+          </Button>
+        </div>
       </div>
 
       <div className="-mx-4 flex-1 px-4">

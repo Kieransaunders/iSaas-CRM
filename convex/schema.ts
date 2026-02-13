@@ -238,7 +238,7 @@ export default defineSchema({
     // Organization this invitation belongs to
     orgId: v.id('orgs'),
     // Role being invited
-    role: v.union(v.literal('staff'), v.literal('client')),
+    role: v.union(v.literal('admin'), v.literal('staff'), v.literal('client')),
     // For client invites: which customer they'll belong to
     customerId: v.optional(v.id('customers')),
     // User who sent the invitation

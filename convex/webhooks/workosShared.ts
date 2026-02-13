@@ -134,7 +134,7 @@ export async function processWorkOSWebhook(
   );
 
   let pendingInvitationId: Id<"pendingInvitations"> | undefined = pendingByWorkosId?._id;
-  let invitationRole: "staff" | "client" | undefined = pendingByWorkosId?.role;
+  let invitationRole: "admin" | "staff" | "client" | undefined = pendingByWorkosId?.role;
   let invitationCustomerId: Id<"customers"> | undefined = pendingByWorkosId?.customerId;
   let invitationEmail: string | undefined = eventEmail ?? pendingByWorkosId?.email;
 
@@ -147,7 +147,7 @@ export async function processWorkOSWebhook(
 
     if (pendingByEmail) {
       pendingInvitationId = pendingByEmail._id;
-      invitationRole = pendingByEmail.role;
+      invitationRole = pendingByEmail.role as "admin" | "staff" | "client";
       invitationCustomerId = pendingByEmail.customerId;
       invitationEmail = eventEmail;
     }

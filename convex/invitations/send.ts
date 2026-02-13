@@ -12,7 +12,7 @@ import { getLimitsForSubscription } from '../billing/plans';
 export const sendInvitation = action({
   args: {
     email: v.string(),
-    role: v.union(v.literal('staff'), v.literal('client')),
+    role: v.union(v.literal('admin'), v.literal('staff'), v.literal('client')),
     customerId: v.optional(v.id('customers')),
   },
   handler: async (ctx, args) => {

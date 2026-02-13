@@ -12,7 +12,7 @@ export const syncFromInvitation = internalMutation({
     firstName: v.optional(v.string()),
     lastName: v.optional(v.string()),
     orgId: v.id("orgs"),
-    role: v.union(v.literal("staff"), v.literal("client")),
+    role: v.union(v.literal("admin"), v.literal("staff"), v.literal("client")),
     customerId: v.optional(v.id("customers")),
   },
   handler: async (ctx, args) => {

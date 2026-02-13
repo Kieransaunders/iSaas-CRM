@@ -1,8 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { AlertCircle, Bell, Building2, Loader2, Settings, Shield } from 'lucide-react';
-import { useAction, useQuery } from 'convex/react';
+import { AlertCircle, Bell, Building2, Clock, Loader2, Mail, Settings, Shield, Trash2, UserPlus, Users, X } from 'lucide-react';
+import { useAction, useMutation, useQuery } from 'convex/react';
 import { useEffect, useState } from 'react';
 import { api } from '../../../convex/_generated/api';
+import type { Id } from '../../../convex/_generated/dataModel';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +11,37 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { toast } from 'sonner';
 
 export const Route = createFileRoute('/_authenticated/settings')({
   component: SettingsPage,
@@ -169,6 +201,41 @@ function SettingsPage() {
           </CardContent>
         </Card>
 
+        {/* Team Members */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Users className="h-5 w-5 text-muted-foreground" />
+                <CardTitle>Team Members</CardTitle>
+              </div>
+              <InviteMemberDialog />
+            </div>
+            <CardDescription>
+              Manage your organization&apos;s team members and roles
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <MembersTable />
+          </CardContent>
+        </Card>
+
+        {/* Pending Invitations */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Mail className="h-5 w-5 text-muted-foreground" />
+              <CardTitle>Pending Invitations</CardTitle>
+            </div>
+            <CardDescription>
+              Invitations that haven&apos;t been accepted yet
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <PendingInvitationsTable />
+          </CardContent>
+        </Card>
+
         {/* Notifications */}
         <Card>
           <CardHeader>
@@ -248,5 +315,358 @@ function SettingsPage() {
         </Card>
       </div>
     </div>
+  );
+}
+
+// ============================================================================
+// Team Management Components
+// ============================================================================
+
+function MembersTable() {
+  const members = useQuery(api.users.queries.listOrgMembers, { includeRemoved: true });
+  const updateRole = useMutation(api.users.manage.updateUserRole);
+  const removeMember = useAction(api.users.manageActions.removeOrgMember);
+  const restoreUser = useMutation(api.users.manage.restoreUser);
+
+  if (members === undefined) {
+    return (
+      <div className="flex justify-center py-8">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (members.length === 0) {
+    return <p className="text-sm text-muted-foreground">No team members found.</p>;
+  }
+
+  const handleRoleChange = async (userId: Id<'users'>, newRole: 'admin' | 'staff') => {
+    try {
+      await updateRole({ userId, newRole });
+      toast.success('Role updated successfully');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to update role');
+    }
+  };
+
+  const handleRemove = async (userId: Id<'users'>) => {
+    try {
+      await removeMember({ userId });
+      toast.success('Member removed');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to remove member');
+    }
+  };
+
+  const handleRestore = async (userId: Id<'users'>) => {
+    try {
+      await restoreUser({ userId });
+      toast.success('Member restored');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to restore member');
+    }
+  };
+
+  const getInitials = (firstName?: string, lastName?: string, email?: string) => {
+    if (firstName && lastName) return `${firstName[0]}${lastName[0]}`.toUpperCase();
+    if (firstName) return firstName[0].toUpperCase();
+    if (email) return email[0].toUpperCase();
+    return '?';
+  };
+
+  return (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Member</TableHead>
+          <TableHead>Role</TableHead>
+          <TableHead>Joined</TableHead>
+          <TableHead className="text-right">Actions</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {members.map((member) => (
+          <TableRow key={member._id} className={member.status === 'removed' ? 'opacity-50' : ''}>
+            <TableCell>
+              <div className="flex items-center gap-3">
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src={member.profilePictureUrl ?? undefined} />
+                  <AvatarFallback className="text-xs">
+                    {getInitials(member.firstName ?? undefined, member.lastName ?? undefined, member.email)}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="text-sm font-medium">{member.displayName}</p>
+                  <p className="text-xs text-muted-foreground">{member.email}</p>
+                </div>
+                {member.isCurrentUser && (
+                  <Badge variant="outline" className="text-xs">You</Badge>
+                )}
+                {member.status === 'removed' && (
+                  <Badge variant="destructive" className="text-xs">Removed</Badge>
+                )}
+              </div>
+            </TableCell>
+            <TableCell>
+              {member.isCurrentUser || member.status === 'removed' || member.role === 'client' ? (
+                <Badge variant="secondary" className="capitalize">
+                  {member.role}
+                </Badge>
+              ) : (
+                <Select
+                  value={member.role || 'staff'}
+                  onValueChange={(value) =>
+                    handleRoleChange(member._id, value as 'admin' | 'staff')
+                  }
+                >
+                  <SelectTrigger className="w-[110px] h-8">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="admin">Admin</SelectItem>
+                    <SelectItem value="staff">Staff</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+            </TableCell>
+            <TableCell className="text-sm text-muted-foreground">
+              {new Date(member.createdAt).toLocaleDateString()}
+            </TableCell>
+            <TableCell className="text-right">
+              {member.isCurrentUser ? null : member.status === 'removed' ? (
+                <Button variant="ghost" size="sm" onClick={() => handleRestore(member._id)}>
+                  Restore
+                </Button>
+              ) : (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Remove member</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to remove {member.displayName} from the organization?
+                        They will lose access to all CRM data. This action can be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        onClick={() => handleRemove(member._id)}
+                      >
+                        Remove
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  );
+}
+
+function InviteMemberDialog() {
+  const [open, setOpen] = useState(false);
+  const [email, setEmail] = useState('');
+  const [role, setRole] = useState<'admin' | 'staff'>('staff');
+  const [isSending, setIsSending] = useState(false);
+  const sendInvitation = useAction(api.invitations.send.sendInvitation);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim()) return;
+
+    setIsSending(true);
+    try {
+      await sendInvitation({
+        email: email.trim().toLowerCase(),
+        role,
+      });
+      toast.success(`Invitation sent to ${email}`);
+      setEmail('');
+      setRole('staff');
+      setOpen(false);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to send invitation');
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button size="sm" className="gap-2">
+          <UserPlus className="h-4 w-4" />
+          Invite Member
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Invite a team member</DialogTitle>
+          <DialogDescription>
+            Send an email invitation to join your organization.
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="invite-email">Email address</Label>
+            <Input
+              id="invite-email"
+              type="email"
+              placeholder="colleague@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="invite-role">Role</Label>
+            <Select value={role} onValueChange={(v) => setRole(v as 'admin' | 'staff')}>
+              <SelectTrigger id="invite-role">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="staff">Staff</SelectItem>
+                <SelectItem value="admin">Admin</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              Admins can manage team members and organization settings. Staff can manage CRM data.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={!email.trim() || isSending}>
+              {isSending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+              Send Invitation
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function PendingInvitationsTable() {
+  const invitations = useQuery(api.invitations.queries.listPendingInvitations);
+  const revokeInvitation = useAction(api.invitations.manage.revokeInvitation);
+  const resendInvitation = useAction(api.invitations.manage.resendInvitation);
+
+  if (invitations === undefined) {
+    return (
+      <div className="flex justify-center py-8">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (invitations.length === 0) {
+    return <p className="text-sm text-muted-foreground">No pending invitations.</p>;
+  }
+
+  const handleRevoke = async (invitationId: Id<'pendingInvitations'>) => {
+    try {
+      await revokeInvitation({ invitationId });
+      toast.success('Invitation revoked');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to revoke invitation');
+    }
+  };
+
+  const handleResend = async (invitationId: Id<'pendingInvitations'>) => {
+    try {
+      await resendInvitation({ invitationId });
+      toast.success('Invitation resent');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to resend invitation');
+    }
+  };
+
+  return (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Email</TableHead>
+          <TableHead>Role</TableHead>
+          <TableHead>Sent</TableHead>
+          <TableHead>Status</TableHead>
+          <TableHead className="text-right">Actions</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {invitations.map((invitation) => {
+          const isExpired = invitation.expiresAt < Date.now();
+          return (
+            <TableRow key={invitation._id}>
+              <TableCell className="font-medium">{invitation.email}</TableCell>
+              <TableCell>
+                <Badge variant="secondary" className="capitalize">
+                  {invitation.role}
+                </Badge>
+              </TableCell>
+              <TableCell className="text-sm text-muted-foreground">
+                {new Date(invitation.createdAt).toLocaleDateString()}
+              </TableCell>
+              <TableCell>
+                {isExpired ? (
+                  <Badge variant="destructive" className="text-xs">Expired</Badge>
+                ) : (
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <Clock className="h-3 w-3" />
+                    Expires {new Date(invitation.expiresAt).toLocaleDateString()}
+                  </div>
+                )}
+              </TableCell>
+              <TableCell className="text-right space-x-2">
+                {isExpired && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleResend(invitation._id)}
+                  >
+                    Resend
+                  </Button>
+                )}
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
+                      Revoke
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Revoke invitation</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to revoke the invitation for {invitation.email}?
+                        They will no longer be able to join using this invitation link.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        onClick={() => handleRevoke(invitation._id)}
+                      >
+                        Revoke
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </TableCell>
+            </TableRow>
+          );
+        })}
+      </TableBody>
+    </Table>
   );
 }

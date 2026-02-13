@@ -14,6 +14,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -58,8 +59,9 @@ export function CompanyDetailModal({
 }: CompanyDetailModalProps) {
   const company = useQuery(api.crm.companies.getCompany, companyId ? { companyId } : 'skip');
   const activities = useQuery(api.crm.activities.listCompanyActivities, companyId ? { companyId } : 'skip');
-  const contacts = useQuery(api.crm.contacts.listContacts);
+  const contacts = useQuery(api.crm.contacts.listContacts, { ownerFilter: 'all' });
   const companyDeals = useQuery(api.crm.relationships.listCompanyDeals, companyId ? { companyId } : 'skip');
+  const orgMembers = useQuery(api.users.queries.listOrgMembers, {});
 
   const updateCompany = useMutation(api.crm.companies.updateCompany);
   const deleteCompany = useMutation(api.crm.companies.deleteCompany);
@@ -329,6 +331,45 @@ export function CompanyDetailModal({
                           </p>
                         </div>
                       ) : null}
+
+                      {/* Owner Assignment */}
+                      <div className="space-y-2">
+                        <Label>Owner</Label>
+                        <Select
+                          value={company.ownerUserId ?? 'unassigned'}
+                          onValueChange={async (value) => {
+                            try {
+                              await updateCompany({
+                                companyId,
+                                ownerUserId: value === 'unassigned' ? undefined : value as Id<'users'>,
+                              });
+                            } catch (err) {
+                              // Error handled by mutation
+                            }
+                          }}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Unassigned" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="unassigned">Unassigned</SelectItem>
+                            {orgMembers?.map((member) => (
+                              <SelectItem key={member._id} value={member._id}>
+                                <div className="flex items-center gap-2">
+                                  <Avatar className="h-5 w-5">
+                                    <AvatarImage src={member.profilePictureUrl ?? undefined} />
+                                    <AvatarFallback className="text-[10px]">
+                                      {member.displayName[0]}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  {member.displayName}
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
                       <Button variant="outline" onClick={handleStartEditing}>
                         Edit
                       </Button>

@@ -26,7 +26,7 @@ export const storePendingInvitation = internalMutation({
     workosInvitationId: v.string(),
     email: v.string(),
     orgId: v.id("orgs"),
-    role: v.union(v.literal("staff"), v.literal("client")),
+    role: v.union(v.literal("admin"), v.literal("staff"), v.literal("client")),
     customerId: v.optional(v.id("customers")),
     inviterUserId: v.id("users"),
     createdAt: v.number(),
@@ -231,7 +231,7 @@ export const getPendingInvitationByEmailGlobal = internalQuery({
       _id: v.id("pendingInvitations"),
       workosInvitationId: v.string(),
       orgId: v.id("orgs"),
-      role: v.union(v.literal("staff"), v.literal("client")),
+      role: v.union(v.literal("admin"), v.literal("staff"), v.literal("client")),
       customerId: v.optional(v.id("customers")),
       createdAt: v.number(),
       expiresAt: v.number(),
@@ -280,7 +280,7 @@ export const getPendingInvitationDetailsByEmail = internalQuery({
     v.object({
       _id: v.id("pendingInvitations"),
       workosInvitationId: v.string(),
-      role: v.union(v.literal("staff"), v.literal("client")),
+      role: v.union(v.literal("admin"), v.literal("staff"), v.literal("client")),
       customerId: v.optional(v.id("customers")),
       expiresAt: v.number(),
     })

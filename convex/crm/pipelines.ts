@@ -130,13 +130,14 @@ export const moveDealToStage = mutation({
 export const getPipelineBoard = query({
   args: {
     pipelineId: v.id('pipelines'),
+    ownerFilter: v.optional(v.union(v.literal('all'), v.literal('mine'))),
   },
   handler: async (ctx, args) => {
-    const { orgId } = await requireCrmUser(ctx);
+    const { orgId, userRecord } = await requireCrmUser(ctx);
     const pipeline = await ctx.db.get('pipelines', args.pipelineId);
     ensureSameOrgEntity(orgId, pipeline, 'Pipeline not found');
 
-    const [stages, deals] = await Promise.all([
+    const [stages, allDeals] = await Promise.all([
       ctx.db
         .query('pipelineStages')
         .withIndex('by_pipeline_order', (q) => q.eq('pipelineId', args.pipelineId))
@@ -147,7 +148,12 @@ export const getPipelineBoard = query({
         .collect(),
     ]);
 
-    // Enrich deals with primary contact name
+    // Apply owner filter
+    const deals = args.ownerFilter === 'mine'
+      ? allDeals.filter((d) => d.ownerUserId === userRecord._id)
+      : allDeals;
+
+    // Enrich deals with primary contact name and owner info
     const enrichedDeals = await Promise.all(
       deals.map(async (deal) => {
         const dealContact = await ctx.db
@@ -163,7 +169,20 @@ export const getPipelineBoard = query({
           }
         }
 
-        return { ...deal, contactName };
+        // Get owner info
+        let ownerName: string | undefined;
+        let ownerAvatarUrl: string | undefined;
+        if (deal.ownerUserId) {
+          const owner = await ctx.db.get('users', deal.ownerUserId);
+          if (owner) {
+            ownerName = owner.firstName && owner.lastName
+              ? `${owner.firstName} ${owner.lastName}`
+              : owner.firstName || owner.email;
+            ownerAvatarUrl = owner.profilePictureUrl;
+          }
+        }
+
+        return { ...deal, contactName, ownerName, ownerAvatarUrl };
       }),
     );
 

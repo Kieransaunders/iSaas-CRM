@@ -1,5 +1,6 @@
-import { ConvexError, v  } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { mutation } from "../_generated/server";
+import { blockDuringImpersonation } from "../crm/authz";
 
 /**
  * Soft-delete a user (sets deletedAt timestamp)
@@ -65,6 +66,76 @@ export const removeUser = mutation({
         await ctx.db.delete("staffCustomerAssignments", assignment._id);
       }
     }
+
+    return { success: true };
+  },
+});
+
+/**
+ * Update a user's role within the organization
+ * Admin-only: cannot change own role, only staff<->admin transitions allowed
+ */
+export const updateUserRole = mutation({
+  args: {
+    userId: v.id("users"),
+    newRole: v.union(v.literal("admin"), v.literal("staff")),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError("Not authenticated");
+    }
+
+    const workosUserId = identity.subject;
+
+    const currentUser = await ctx.db
+      .query("users")
+      .withIndex("by_workos_user_id", (q) => q.eq("workosUserId", workosUserId))
+      .first();
+
+    if (!currentUser?.orgId) {
+      throw new ConvexError("User not in organization");
+    }
+
+    if (currentUser.role !== "admin") {
+      throw new ConvexError("Admin role required to change user roles");
+    }
+
+    // Block role changes during impersonation
+    // Block role changes during impersonation (both local and WorkOS AuthKit)
+    await blockDuringImpersonation(ctx);
+
+    // Prevent changing own role
+    if (args.userId === currentUser._id) {
+      throw new ConvexError("Cannot change your own role");
+    }
+
+    const targetUser = await ctx.db.get("users", args.userId);
+    if (!targetUser) {
+      throw new ConvexError("User not found");
+    }
+
+    if (targetUser.orgId !== currentUser.orgId) {
+      throw new ConvexError("Cannot change role of user in another organization");
+    }
+
+    if (targetUser.deletedAt) {
+      throw new ConvexError("Cannot change role of a removed user");
+    }
+
+    // Only allow staff <-> admin transitions (not client)
+    if (targetUser.role === "client") {
+      throw new ConvexError("Cannot change client role via this endpoint");
+    }
+
+    if (targetUser.role === args.newRole) {
+      return { success: true }; // No-op
+    }
+
+    await ctx.db.patch("users", args.userId, {
+      role: args.newRole,
+      updatedAt: Date.now(),
+    });
 
     return { success: true };
   },

@@ -14,10 +14,10 @@ export const Route = createFileRoute('/_authenticated/dashboard')({
 function DashboardPage() {
   const ensureDefaultPipeline = useMutation(api.crm.pipelines.ensureDefaultPipeline);
   const defaultPipeline = useQuery(api.crm.pipelines.getDefaultPipeline);
-  const deals = useQuery(api.crm.deals.listDeals);
+  const deals = useQuery(api.crm.deals.listDeals, { ownerFilter: 'all' });
   const activities = useQuery(api.crm.activities.listOrgActivities);
-  const companies = useQuery(api.crm.companies.listCompanies);
-  const contacts = useQuery(api.crm.contacts.listContacts);
+  const companies = useQuery(api.crm.companies.listCompanies, { ownerFilter: 'all' });
+  const contacts = useQuery(api.crm.contacts.listContacts, { ownerFilter: 'all' });
 
   useEffect(() => {
     if (defaultPipeline === null) {

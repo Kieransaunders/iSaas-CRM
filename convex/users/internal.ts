@@ -87,3 +87,27 @@ export const softDeleteUser = internalMutation({
     return null;
   },
 });
+
+/**
+ * Check if the current user is in an impersonated session.
+ * For use in actions that need to block sensitive operations during impersonation.
+ */
+export const isImpersonatedSession = internalQuery({
+  args: {
+    workosUserId: v.string(),
+  },
+  returns: v.boolean(),
+  handler: async (ctx, args) => {
+    // Check local impersonation
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_workos_user_id", (q) => q.eq("workosUserId", args.workosUserId))
+      .first();
+
+    if (user?.impersonatingUserId) {
+      return true;
+    }
+
+    return false;
+  },
+});
